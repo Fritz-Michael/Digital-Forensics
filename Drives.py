@@ -19,5 +19,4 @@ if __name__ == '__main__':
 	for drive in drives:
 		print("[%d] %s" % (x,drive))
 		x += 1
-	#option = raw_input("Choose a System Drive: ")
 	
