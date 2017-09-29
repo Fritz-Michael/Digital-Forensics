@@ -25,7 +25,6 @@ def getbytespersector(path):
 		None,
 		None,
 	)
-
 	return bytesPerSector.value
 
 def getsectorspercluster(path):
