@@ -1,9 +1,13 @@
 import string
-from ctypes import windll
-import ctypes
 import time
 import os
-from dd import *
+from ctypes import windll
+import ctypes
+import platform
+try:
+	from WindowsFunctions import *
+except BaseException:
+	from LinuxFunctions import *
 
 def get_drives():
     drives = []
@@ -13,37 +17,6 @@ def get_drives():
             drives.append(letter)
         bitmask >>= 1
     return drives
-
-def getbytespersector(path):
-	sectorsPerCluster = ctypes.c_ulonglong(0)
-	bytesPerSector = ctypes.c_ulonglong(0)
-	rootPathName = ctypes.c_wchar_p(u"" + path + ":\\")
-
-	ctypes.windll.kernel32.GetDiskFreeSpaceW(rootPathName,
-		ctypes.pointer(sectorsPerCluster),
-		ctypes.pointer(bytesPerSector),
-		None,
-		None,
-	)
-	return bytesPerSector.value
-
-def getsectorspercluster(path):
-	sectorsPerCluster = ctypes.c_ulonglong(0)
-	bytesPerSector = ctypes.c_ulonglong(0)
-	rootPathName = ctypes.c_wchar_p(u"" + path + ":\\")
-
-	ctypes.windll.kernel32.GetDiskFreeSpaceW(rootPathName,
-		ctypes.pointer(sectorsPerCluster),
-		ctypes.pointer(bytesPerSector),
-		None,
-		None,
-	)
-	return sectorsPerCluster.value
-
-def readdrive(path, rootPath):
-    drivepath = open(path, 'rb')
-    bytesPerSector = getbytespersector(rootPath)
-    sectorPerCluster = getsectorspercluster(rootPath)
 
 def getmetadata(path):
     return os.stat(path)
@@ -59,7 +32,10 @@ if __name__ == '__main__':
 	option = input("Choose a Drive: ")
 	path = dictDrive[int(option)]
 	temppath = '\\\\.\\' + path + ':'
-	readdrive(temppath, path)
+	if platform.system() == 'Windows':
+		readdriveWin(temppath, path)
+	else:
+		readdriveLinux(temppath, path)
 		
         
 
