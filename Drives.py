@@ -1,10 +1,10 @@
 import string
 import time
 import os
-from ctypes import windll
-import ctypes
 import platform
 try:
+	from ctypes import windll
+	import ctypes
 	from WindowsFunctions import *
 except BaseException:
 	from LinuxFunctions import *

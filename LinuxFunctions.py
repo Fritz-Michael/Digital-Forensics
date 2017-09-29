@@ -12,6 +12,6 @@ def getnumberofblocks(path):
 
 def readdriveLinux(path, rootPath):
 	drivepath = open(path, 'rb')
-    bytesPerSector = getblocksize(rootPath)
-    sectorPerCluster = getnumberofblocks(rootPath)
-    print(drivepath.read(1))
+	bytesPerSector = getblocksize(rootPath)
+	sectorPerCluster = getnumberofblocks(rootPath)
+	print(drivepath.read(1))
