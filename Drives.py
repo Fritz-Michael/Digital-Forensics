@@ -1,5 +1,6 @@
 import string
 from ctypes import windll
+import ctypes
 import time
 import os
 from dd import *
@@ -13,8 +14,37 @@ def get_drives():
         bitmask >>= 1
     return drives
 
-def readdrive(path):
+def getbytespersector(path):
+	sectorsPerCluster = ctypes.c_ulonglong(0)
+	bytesPerSector = ctypes.c_ulonglong(0)
+	rootPathName = ctypes.c_wchar_p(u"" + path + ":\\")
+
+	ctypes.windll.kernel32.GetDiskFreeSpaceW(rootPathName,
+		ctypes.pointer(sectorsPerCluster),
+		ctypes.pointer(bytesPerSector),
+		None,
+		None,
+	)
+
+	return bytesPerSector.value
+
+def getsectorspercluster(path):
+	sectorsPerCluster = ctypes.c_ulonglong(0)
+	bytesPerSector = ctypes.c_ulonglong(0)
+	rootPathName = ctypes.c_wchar_p(u"" + path + ":\\")
+
+	ctypes.windll.kernel32.GetDiskFreeSpaceW(rootPathName,
+		ctypes.pointer(sectorsPerCluster),
+		ctypes.pointer(bytesPerSector),
+		None,
+		None,
+	)
+	return sectorsPerCluster.value
+
+def readdrive(path, rootPath):
     drivepath = open(path, 'rb')
+    bytesPerSector = getbytespersector(rootPath)
+    sectorPerCluster = getsectorspercluster(rootPath)
 
 def getmetadata(path):
     return os.stat(path)
@@ -29,8 +59,8 @@ if __name__ == '__main__':
 		dictDrive.append(drive)
 	option = input("Choose a Drive: ")
 	path = dictDrive[int(option)]
-	path = '\\\\.\\' + path + ':'
-	readdrive(path)
+	temppath = '\\\\.\\' + path + ':'
+	readdrive(temppath, path)
 		
         
 
