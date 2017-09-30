@@ -7,8 +7,10 @@ try:
 	from ctypes import windll
 	import ctypes
 	from WindowsFunctions import *
-except BaseException:
+	print("hello")
+except BaseException as e:
 	from LinuxFunctions import *
+	print(e)
 
 def getmetadata(path):
     return os.stat(path)
