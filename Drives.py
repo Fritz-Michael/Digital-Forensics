@@ -32,15 +32,14 @@ if __name__ == '__main__':
 		for drive in drives:
 			print("[%d] %s %s" % (x,drive[0],drive[-1]))
 			x += 1
-			dictDrive.append(drive)
-
+			dictDrive.append(drive[0])
+		option = input("Choose a Drive: ")
+		path = dictDrive[int(option)]
 
 	if platform.system() == 'Windows':
 		readdriveWin(temppath, path)
 	else:
-		temppath = '/media/root'
-		path = temppath
-		readdriveLinux(temppath, path)
+		readdriveLinux(path)
 		
         
 

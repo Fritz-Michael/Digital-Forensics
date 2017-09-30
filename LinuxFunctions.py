@@ -18,8 +18,9 @@ def getnumberofblocks(path):
 def getinodenumber(path):
 	return os.stat(path).st_ino
 
-def readdriveLinux(path, rootPath):
-	#drivepath = open('/dev/sdb1', 'rb')
-	bytesPerSector = getblocksize(rootPath)
-	sectorPerCluster = getnumberofblocks(rootPath)
+def readdriveLinux(path):
+	drivepath = open(path, 'rb')
+	bytesPerSector = getblocksize(path)
+	sectorPerCluster = getnumberofblocks(path)
+	print(drivepath.read(1))
 
