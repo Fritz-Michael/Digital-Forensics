@@ -4,6 +4,15 @@ import os
 from ctypes import windll
 import ctypes
 
+def get_drivesWin():
+    drives = []
+    bitmask = windll.kernel32.GetLogicalDrives()
+    for letter in string.ascii_uppercase:
+        if bitmask & 1:
+            drives.append(letter)
+        bitmask >>= 1
+    return drives
+
 def getbytespersector(path):
 	sectorsPerCluster = ctypes.c_ulonglong(0)
 	bytesPerSector = ctypes.c_ulonglong(0)
