@@ -23,4 +23,3 @@ def readdriveLinux(path):
 	bytesPerSector = getblocksize(path)
 	sectorPerCluster = getnumberofblocks(path)
 	print(drivepath.read(1))
-
