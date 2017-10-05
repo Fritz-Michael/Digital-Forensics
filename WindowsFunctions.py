@@ -79,7 +79,7 @@ def findSignatures(path, rootPath, startSector, endSector, headers, footers):
 	while startSector < endSector:
 		drive.seek(bytesPerSector*startSector)
 		foundHeader = False
-		foundFooter = False  
+		foundFooter = False
 		cur = binascii.hexlify(drive.read(1))
 		if cur == headers[0]:
 			posHeader = drive.tell()
