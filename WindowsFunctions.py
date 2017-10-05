@@ -43,47 +43,84 @@ def getsectorspercluster(path):
 
 def getHeaders():
 	signaturesH = []
+	temp = []
 	headers = open('headers.txt','r')
 	with open('headers.txt') as openfileobject:
 		for line in openfileobject:
-			signaturesH.append(line)
+			tempLine = line.split()
+			for li in tempLine:
+				temp.append(bytes(li,'utf-8'))
+			signaturesH.append(temp)
 	headers.close()
 	return signaturesH
 
 def getFooters():
 	signaturesF = []
+	temp = []
 	footers = open('footers.txt','r')
 	with open('footers.txt') as openfileobject:
 		for line in openfileobject:
-			signaturesF.append(line)
+			tempLine = line.split()
+			for li in tempLine:
+				temp.append(bytes(li,'utf-8'))
+			signaturesF.append(temp)
 	footers.close()
 	return signaturesF
 
 #thread function
 def findSignatures(path, rootPath, startSector, endSector, headers, footers):
+	locations = []
 	bytesPerSector = getbytespersector(rootPath)
 	sectorPerCluster = getsectorspercluster(rootPath)
 	drive = open(path,'rb')
 	cur = b'0'
-	pos = 0
-	found = False 
+	posHeader = 0
+	posFooter = 0
 	while startSector < endSector:
+		drive.seek(bytesPerSector*startSector)
+		foundHeader = False
+		foundFooter = False  
 		cur = binascii.hexlify(drive.read(1))
 		if cur == headers[0]:
-			pos = drive.tell()
+			posHeader = drive.tell()
 			nextbyte = cur 
 			for header in headers:
-				if header == cur:
+				if header == nextbyte:
 					nextbyte = binascii.hexlify(drive.read(1))
-					found = True 
+					foundHeader = True 
 				else:
-					drive.seek(pos, 0)
-					found = False
+					drive.seek(posHeader, 0)
+					foundHeader = False
 					break
+			if foundHeader:
+				while not foundFooter:
+					cur = nextbyte = binascii.hexlify(drive.read(1))
+					if nextbyte == footers[0]:
+						for footer in footers:
+							if footer == cur:
+								cur = binascii.hexlify(drive.read(1))
+								foundFooter = True
+							else:
+								foundFooter = False
+				posFooter = drive.tell()
+		startSector += 1
+		if foundHeader and foundFooter:
+			locations.append((posHeader,posFooter))
+	return locations
+
 
 #thread function
-def recoverfile(path, startSector, endSector, header, footer):
-	print("hello")
+def recoverfile(path, startSector, endSector,filename):
+	drive = open(path, 'rb')
+	drive.read(startSector-1)
+	print(drive.tell())
+	image = open("found\\" + str(filename) + ".jpg","wb")
+	while startSector < endSector:
+		cur = drive.read(1)
+		image.write(cur)
+		startSector += 1
+	image.close()
+	print("Saved!")
 
 # def readdriveWin(path, rootPath):
 # 	drive = open(path, 'rb')
