@@ -3,7 +3,7 @@ import time
 import os
 import platform
 import operator
-from thread import threading
+import asyncio
 try:
 	from ctypes import windll
 	import ctypes

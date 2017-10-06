@@ -5,6 +5,7 @@ import binascii
 from ctypes import windll
 import ctypes
 from psutil import *
+import asyncio
 
 def get_drivesWin():
     drives = []
