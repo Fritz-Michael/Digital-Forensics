@@ -16,6 +16,10 @@ def get_drivesWin():
         bitmask >>= 1
     return drives
 
+def getdrivesize(path):
+	driveinfo = os.stat(path)
+	return driveinfo.st_size
+
 def getbytespersector(path):
 	sectorsPerCluster = ctypes.c_ulonglong(0)
 	bytesPerSector = ctypes.c_ulonglong(0)
@@ -68,6 +72,15 @@ def getFooters():
 	footers.close()
 	return signaturesF
 
+def getExtensions():
+	extensions = []
+	ext = open('extensions.txt', 'r')
+	with open('extensions.txt', 'r') as openfileobject:
+		for line in openfileobject:
+			extensions.append(line)
+	ext.close()
+	return extensions
+
 #thread function
 def findSignatures(path, rootPath, startSector, endSector, headers, footers):
 	locations = []
@@ -111,11 +124,11 @@ def findSignatures(path, rootPath, startSector, endSector, headers, footers):
 
 
 #thread function
-def recoverfile(path, startSector, endSector,filename):
+def recoverfile(path, startSector, endSector,filename,extension):
 	drive = open(path, 'rb')
 	drive.read(startSector-1)
 	print(drive.tell())
-	image = open("found\\" + str(filename) + ".png","wb")
+	image = open("found\\" + str(filename) + extension,"wb")
 	while startSector < endSector:
 		cur = drive.read(1)
 		image.write(cur)
