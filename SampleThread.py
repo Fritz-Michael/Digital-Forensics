@@ -4,6 +4,7 @@ import os
 import platform
 import operator
 import threading
+import binascii
 from queue import Queue
 from ctypes import windll
 import ctypes
@@ -11,6 +12,41 @@ from WindowsFunctions import *
 
 print_lock = threading.Lock()
 temp = []
+
+def get_drivesWin():
+    drives = []
+    bitmask = windll.kernel32.GetLogicalDrives()
+    for letter in string.ascii_uppercase:
+        if bitmask & 1:
+            drives.append(letter)
+        bitmask >>= 1
+    return drives
+
+def getbytespersector(path):
+	sectorsPerCluster = ctypes.c_ulonglong(0)
+	bytesPerSector = ctypes.c_ulonglong(0)
+	rootPathName = ctypes.c_wchar_p(u"" + path + ":\\")
+
+	ctypes.windll.kernel32.GetDiskFreeSpaceW(rootPathName,
+		ctypes.pointer(sectorsPerCluster),
+		ctypes.pointer(bytesPerSector),
+		None,
+		None,
+	)
+	return bytesPerSector.value
+
+def getsectorspercluster(path):
+	sectorsPerCluster = ctypes.c_ulonglong(0)
+	bytesPerSector = ctypes.c_ulonglong(0)
+	rootPathName = ctypes.c_wchar_p(u"" + path + ":\\")
+
+	ctypes.windll.kernel32.GetDiskFreeSpaceW(rootPathName,
+		ctypes.pointer(sectorsPerCluster),
+		ctypes.pointer(bytesPerSector),
+		None,
+		None,
+	)
+	return sectorsPerCluster.value
 
 def getHeaders():
 	signaturesH = []
@@ -20,7 +56,7 @@ def getHeaders():
 		for line in openfileobject:
 			tempLine = line.split()
 			for li in tempLine:
-				temp.append(bytes(li,'utf-8'))
+				temp.append(li)
 			signaturesH.append(temp)
 	headers.close()
 	return signaturesH
@@ -33,7 +69,7 @@ def getFooters():
 		for line in openfileobject:
 			tempLine = line.split()
 			for li in tempLine:
-				temp.append(bytes(li,'utf-8'))
+				temp.append(li)
 			signaturesF.append(temp)
 	footers.close()
 	return signaturesF
@@ -48,8 +84,8 @@ def getExtensions():
 	return extensions
 
 #thread function
-def findSignatures(worker, path, rootPath, startSector, endSector, headers, footers, extension):
-	time.sleep(0.5)
+def findSignatures(path, rootPath, startSector, endSector, headers, footers, extension):
+	time.sleep(0.2)
 	with print_lock:
 		locations = []
 		bytesPerSector = getbytespersector(rootPath)
@@ -58,32 +94,36 @@ def findSignatures(worker, path, rootPath, startSector, endSector, headers, foot
 		cur = b'0'
 		posHeader = 0
 		posFooter = 0
+		head = ""
+		foot = ""
+		for header in headers:
+			head += header
+		for footer in footers:
+			foot += footer 
+		head = bytes(head,'utf-8')
+		foot = bytes(foot,'utf-8')
 		while startSector < endSector:
 			drive.seek(bytesPerSector*startSector)
 			foundHeader = False
 			foundFooter = False
 			cur = binascii.hexlify(drive.read(1))
-			if cur == headers[0]:
+
+			if cur == bytes(headers[0],'utf-8'):
 				posHeader = drive.tell()
-				nextbyte = cur 
-				for header in headers:
-					if header == nextbyte:
-						nextbyte = binascii.hexlify(drive.read(1))
-						foundHeader = True 
-					else:
-						drive.seek(posHeader, 0)
-						foundHeader = False
-						break
+				nextbyte = binascii.hexlify(bytes(drive.read(8))) 
+				if head == nextbyte:
+					print("hello")
+					foundHeader = True
+				else:
+					foundHeader = False
+					drive.seek(posHeader)
+
 				if foundHeader:
 					while not foundFooter:
 						cur = nextbyte = binascii.hexlify(drive.read(1))
 						if nextbyte == footers[0]:
-							for footer in footers:
-								if footer == cur:
-									cur = binascii.hexlify(drive.read(1))
-									foundFooter = True
-								else:
-									foundFooter = False
+							if foot == binascii.hexlify(bytes(drive.read(8))):
+								foundFooter = True
 					posFooter = drive.tell()
 			startSector += 1
 			if foundHeader and foundFooter:
@@ -103,36 +143,33 @@ def recoverfile(path, startSector, endSector,filename,extension):
 	image.close()
 	print("Saved!")
 
-def threaderSignature(path, rootPath, startSector, endSector, headers, footers, extension):
-	while True:
-		worker = q.get()
-		a = findSignatures(worker, path, rootPath, startSector, endSector, headers, footers, extension)
-		q.task_done()
-	return a 
-
-def threaderRecover(path, startSector, endSector,filename,extension):
-	while True:
-		worker = q.get()
-		recoverfile(worker, path, startSector, endSector,filename,extension)
-		q.task_done() 
-
-q = Queue()
-y = 0
-sectors = 3000000
-threadNo = 200
+sectors = 2097152
+threadNo = 100
+start = time.time()
 headers = getHeaders()
 footers = getFooters()
 extensions = getExtensions()
+z = int(sectors/threadNo)
 for x in range(0,threadNo):
-	t = threading.Thread(target=threaderSignature, args=('\\\\.\\E:','E',y,int(sectors/threadNo*(x+1)-1),headers[0],footers[0],extensions[0]))
-	y += int(sectors/threadNo)
-	t.daemon = True 
-	t.start()
+	t1 = threading.Thread(target=findSignatures, args=('\\\\.\\E:','E',z*x,z*(x+1)-1,headers[0],footers[0],extensions[0]))
+	t2 = threading.Thread(target=findSignatures, args=('\\\\.\\E:','E',z*(x+1),z*(x+2)-1,headers[0],footers[0],extensions[0]))
+	t3 = threading.Thread(target=findSignatures, args=('\\\\.\\E:','E',z*(x+2),z*(x+3)-1,headers[0],footers[0],extensions[0]))
+	t4 = threading.Thread(target=findSignatures, args=('\\\\.\\E:','E',z*(x+3),z*(x+4)-1,headers[0],footers[0],extensions[0]))
+	t1.daemon = True
+	t2.daemon = True
+	t3.daemon = True
+	t4.daemon = True
+	t1.start()
+	t2.start()
+	t3.start()
+	t4.start()
+	z += z
 
-start = time.time()
 
-for worker in range(threadNo):
-	q.put(worker)
-q.join()
+for x in range(0,threadNo):
+	t1.join()
+	t2.join()
+	t3.join()
+	t4.join()
 
 print("total time: ", time.time()-start)

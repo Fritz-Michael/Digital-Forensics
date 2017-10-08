@@ -12,8 +12,9 @@ if __name__ == '__main__':
 	footers = getFooters()
 	extensions = getExtensions()
 	x = 0
-	signatures = findSignatures('\\\\.\\E:', 'E', 40000, 1000000, headers[0], footers[0] )
-	for signature in signatures:
-		recoverfile('\\\\.\\E:',signature[0],signature[1],x,extensions[0])
-		x += 1
-	
+	string = ""
+	for header in headers[0]:
+		string += header
+	drive = open('\\\\.\\E:', 'rb')
+	drive.seek(1435967488)
+	print(bytes(string,'utf-8') == binascii.hexlify(drive.read(8)))

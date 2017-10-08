@@ -1,11 +1,16 @@
 import string
 import time
 import os
-import binascii
+import platform
+import operator
+import threading
+from queue import Queue
 from ctypes import windll
 import ctypes
-from psutil import *
-import asyncio
+from WindowsFunctions import *
+
+print_lock = threading.Lock()
+temp = []
 
 def get_drivesWin():
     drives = []
@@ -15,10 +20,6 @@ def get_drivesWin():
             drives.append(letter)
         bitmask >>= 1
     return drives
-
-def getdrivesize(path):
-	driveinfo = os.stat(path)
-	return driveinfo.st_size
 
 def getbytespersector(path):
 	sectorsPerCluster = ctypes.c_ulonglong(0)
@@ -54,7 +55,7 @@ def getHeaders():
 		for line in openfileobject:
 			tempLine = line.split()
 			for li in tempLine:
-				temp.append(bytes(li,'utf-8'))
+				temp.append(li)
 			signaturesH.append(temp)
 	headers.close()
 	return signaturesH
@@ -67,7 +68,7 @@ def getFooters():
 		for line in openfileobject:
 			tempLine = line.split()
 			for li in tempLine:
-				temp.append(bytes(li,'utf-8'))
+				temp.append(li)
 			signaturesF.append(temp)
 	footers.close()
 	return signaturesF
@@ -82,46 +83,47 @@ def getExtensions():
 	return extensions
 
 #thread function
-def findSignatures(path, rootPath, startSector, endSector, headers, footers):
-	locations = []
-	bytesPerSector = getbytespersector(rootPath)
-	sectorPerCluster = getsectorspercluster(rootPath)
-	drive = open(path,'rb')
-	cur = b'0'
-	posHeader = 0
-	posFooter = 0
-	while startSector < endSector:
-		drive.seek(bytesPerSector*startSector)
-		foundHeader = False
-		foundFooter = False
-		cur = binascii.hexlify(drive.read(1))
-		if cur == headers[0]:
-			posHeader = drive.tell()
-			nextbyte = cur 
-			for header in headers:
-				if header == nextbyte:
-					nextbyte = binascii.hexlify(drive.read(1))
-					foundHeader = True 
-				else:
-					drive.seek(posHeader, 0)
-					foundHeader = False
-					break
-			if foundHeader:
-				while not foundFooter:
-					cur = nextbyte = binascii.hexlify(drive.read(1))
-					if nextbyte == footers[0]:
-						for footer in footers:
-							if footer == cur:
-								cur = binascii.hexlify(drive.read(1))
-								foundFooter = True
-							else:
-								foundFooter = False
-				posFooter = drive.tell()
-		startSector += 1
-		if foundHeader and foundFooter:
-			locations.append((posHeader,posFooter))
-	return locations
-
+def findSignatures(path, rootPath, startSector, endSector, headers, footers, extension):
+	time.sleep(0.2)
+	with print_lock:
+		locations = []
+		bytesPerSector = getbytespersector(rootPath)
+		sectorPerCluster = getsectorspercluster(rootPath)
+		drive = open(path,'rb')
+		cur = b'0'
+		posHeader = 0
+		posFooter = 0
+		while startSector < endSector:
+			drive.seek(int(bytesPerSector*startSector))
+			foundHeader = False
+			foundFooter = False
+			cur = binascii.hexlify(drive.read(1))
+			if cur == headers[0]:
+				posHeader = drive.tell()
+				nextbyte = cur 
+				for header in headers:
+					if header == nextbyte:
+						nextbyte = binascii.hexlify(drive.read(1))
+						foundHeader = True 
+					else:
+						drive.seek(posHeader, 0)
+						foundHeader = False
+						break
+				if foundHeader:
+					while not foundFooter:
+						cur = nextbyte = binascii.hexlify(drive.read(1))
+						if nextbyte == footers[0]:
+							for footer in footers:
+								if footer == cur:
+									cur = binascii.hexlify(drive.read(1))
+									foundFooter = True
+								else:
+									foundFooter = False
+					posFooter = drive.tell()
+			startSector += 1
+			if foundHeader and foundFooter:
+				recoverfile(path,posHeader,posFooter,posHeader-1,extension)
+		print("Im done", threading.current_thread().name)
 
 #thread function
 def recoverfile(path, startSector, endSector,filename,extension):
