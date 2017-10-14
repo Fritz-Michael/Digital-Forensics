@@ -5,13 +5,16 @@ import platform
 import operator
 import threading
 import binascii
-from queue import Queue
 from ctypes import windll
 import ctypes
 from WindowsFunctions import *
+import multiprocessing
 
-print_lock = threading.Lock()
-temp = []
+#### GLOBAL VARIABLES ####
+headerSign = []
+footerSign = []
+extensionSign = []
+locations = []
 
 def get_drivesWin():
     drives = []
@@ -49,45 +52,45 @@ def getsectorspercluster(path):
 	return sectorsPerCluster.value
 
 def getHeaders():
-	signaturesH = []
-	temp = []
-	headers = open('headers.txt','r')
+	#signaturesH = []
+	#headers = open('headers.txt','r')
 	with open('headers.txt') as openfileobject:
 		for line in openfileobject:
+			temp = []
 			tempLine = line.split()
 			for li in tempLine:
 				temp.append(bytes(li,'utf-8'))
-			signaturesH.append(temp)
-	headers.close()
-	return signaturesH
+			#signaturesH.append(temp)
+			headerSign.append(temp)
+	#headers.close()
+	#return signaturesH
 
 def getFooters():
-	signaturesF = []
+	#signaturesF = []
 	temp = []
-	footers = open('footers.txt','r')
+	#footers = open('footers.txt','r')
 	with open('footers.txt') as openfileobject:
 		for line in openfileobject:
 			tempLine = line.split()
 			for li in tempLine:
 				temp.append(bytes(li,'utf-8'))
-			signaturesF.append(temp)
-	footers.close()
-	return signaturesF
+			#signaturesF.append(temp)
+			footerSign.append(temp)
+	#footers.close()
+	#return signaturesF
 
 def getExtensions():
-	extensions = []
-	ext = open('extensions.txt', 'r')
+	#extensions = []
+	#ext = open('extensions.txt', 'r')
 	with open('extensions.txt', 'r') as openfileobject:
 		for line in openfileobject:
-			extensions.append(line)
-	ext.close()
-	return extensions
+			#extensions.append(line)
+			extensionSign.append(line)
+	#ext.close()
+	#return extensions
 
-#thread function
-def findSignatures(path, rootPath, startSector, endSector, headers, footers, extension):
-	#time.sleep(0.2)
-#with print_lock:
-	locations = []
+def findSignatures(path, rootPath, startSector, endSector, headers, footers, locHolder):
+	time.sleep(0.2)
 	bytesPerSector = getbytespersector(rootPath)
 	sectorPerCluster = getsectorspercluster(rootPath)
 	drive = open(path,'rb')
@@ -123,32 +126,64 @@ def findSignatures(path, rootPath, startSector, endSector, headers, footers, ext
 				posFooter = drive.tell()
 		startSector += 1
 		if foundHeader and foundFooter:
-			recoverfile(path,posHeader,posFooter,posHeader-1,extension)
-			print("hello")
+			locHolder.append((posHeader,posFooter))
 	print("Im done", threading.current_thread().name)
 	drive.close()
 
 #thread function
-def recoverfile(path, startSector, endSector,filename,extension):
+def recoverfile(path, filepositions, extension):
+	time.sleep(0.02)
 	drive = open(path, 'rb')
-	drive.read(startSector-1)
-	print(drive.tell())
-	image = open("found\\" + str(filename) + extension,"wb")
-	while startSector < endSector:
-		cur = drive.read(1)
-		image.write(cur)
-		startSector += 1
-	image.close()
-	print("Saved!")
+	for fileposition in filepositions:
+		start = fileposition[0]
+		end = fileposition[1]
+		image = open("found\\" + str(start) + extension,"wb")
+		drive.seek(start-1)
+		while start < end:
+			cur = drive.read(1)
+			image.write(cur)
+			start += 1
+		image.close()
+		print("Saved ", extension, " file!")
 
 if __name__ == '__main__':
-	sectors = 2097152
-	threadNo = 100
-	start = time.time()
-	headers = getHeaders()
-	footers = getFooters()
-	extensions = getExtensions()
 
-	findSignatures('\\\\.\\E:','E',0,3000000,headers[0],footers[0],extensions[0])
+	process = []
+	start = time.time()
+
+	### get the file types ###
+	getHeaders()
+	getFooters()
+	getExtensions()
+	##########################
+
+	### searching for signatures ###
+	for x in range(len(headerSign)):
+		locations.append([])
+
+	for x in range(len(headerSign)):
+		process.append(multiprocessing.Process(target=findSignatures,args=('\\\\.\\E:','E',0,3000000,headerSign[x],footerSign[x],locations[x])))
+
+	for x in range(len(headerSign)):
+		process[x].start()
+
+	for x in range(len(headerSign)):
+		process[x].join()
+	###############################
+
+	process = []
+	startRecover = time.time()
+	### recovering files ###
+	for x in range(len(headerSign)):
+		process.append(multiprocessing.Process(target=recoverfile,args=('\\\\.\\E:',locations[x],extensionSign[x].rstrip())))
+
+	for x in range(len(headerSign)):
+		process[x].start()
+
+	for x in range(len(headerSign)):
+		process[x].join()
+	########################
+
+	print("total recover time: ", time.time()-startRecover)
 
 	print("total time: ", time.time()-start)

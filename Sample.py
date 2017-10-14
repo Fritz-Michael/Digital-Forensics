@@ -8,9 +8,8 @@ from psutil import *
 from WindowsFunctions import *
 
 if __name__ == '__main__':
-	headers = getHeaders()
-	footers = getFooters()
-	extensions = getExtensions()
-	
-
-	print(binascii.unhexlify(headers[0]))
+	start = time.time()
+	drive = open('\\\\.\\E:', 'rb')
+	drive.read(1)
+	drive.close()
+	print("total time: ", time.time() - start)
