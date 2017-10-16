@@ -9,12 +9,12 @@ from ctypes import windll
 import ctypes
 from WindowsFunctions import *
 import multiprocessing
+from multiprocessing import Manager
 
 #### GLOBAL VARIABLES ####
 headerSign = []
 footerSign = []
 extensionSign = []
-locations = []
 
 def get_drivesWin():
     drives = []
@@ -52,8 +52,6 @@ def getsectorspercluster(path):
 	return sectorsPerCluster.value
 
 def getHeaders():
-	#signaturesH = []
-	#headers = open('headers.txt','r')
 	with open('headers.txt') as openfileobject:
 		for line in openfileobject:
 			temp = []
@@ -62,34 +60,22 @@ def getHeaders():
 				temp.append(bytes(li,'utf-8'))
 			#signaturesH.append(temp)
 			headerSign.append(temp)
-	#headers.close()
-	#return signaturesH
 
 def getFooters():
-	#signaturesF = []
-	temp = []
-	#footers = open('footers.txt','r')
 	with open('footers.txt') as openfileobject:
 		for line in openfileobject:
+			temp = []
 			tempLine = line.split()
 			for li in tempLine:
 				temp.append(bytes(li,'utf-8'))
-			#signaturesF.append(temp)
 			footerSign.append(temp)
-	#footers.close()
-	#return signaturesF
 
 def getExtensions():
-	#extensions = []
-	#ext = open('extensions.txt', 'r')
 	with open('extensions.txt', 'r') as openfileobject:
 		for line in openfileobject:
-			#extensions.append(line)
 			extensionSign.append(line)
-	#ext.close()
-	#return extensions
 
-def findSignatures(path, rootPath, startSector, endSector, headers, footers, locHolder):
+def findSignatures(path, rootPath, startSector, endSector, headers, footers, locHolder, additional):
 	time.sleep(0.2)
 	bytesPerSector = getbytespersector(rootPath)
 	sectorPerCluster = getsectorspercluster(rootPath)
@@ -126,9 +112,13 @@ def findSignatures(path, rootPath, startSector, endSector, headers, footers, loc
 				posFooter = drive.tell()
 		startSector += 1
 		if foundHeader and foundFooter:
+			print("huli ka", posHeader, posFooter)
 			locHolder.append((posHeader,posFooter))
 	print("Im done", threading.current_thread().name)
 	drive.close()
+
+def finddocxls(path, rootPath, startSector, endSector, headers, footers, locHolder):
+	pass
 
 #thread function
 def recoverfile(path, filepositions, extension):
@@ -137,7 +127,7 @@ def recoverfile(path, filepositions, extension):
 	for fileposition in filepositions:
 		start = fileposition[0]
 		end = fileposition[1]
-		image = open("found\\" + str(start) + extension,"wb")
+		image = open('found\\' + str(start) + extension, 'wb')
 		drive.seek(start-1)
 		while start < end:
 			cur = drive.read(1)
@@ -145,24 +135,69 @@ def recoverfile(path, filepositions, extension):
 			start += 1
 		image.close()
 		print("Saved ", extension, " file!")
+	drive.close()
 
-if __name__ == '__main__':
+def recoverdocxxlsx(path, filepositions):
+	time.sleep(0.2)
+	drive.open(path, 'rb')
+	isdocx = False
+	isxlsx = False
+	prev = ''
+	for fileposition in filepositions:
+		start = fileposition[0]
+		end = fileposition[1]
+		image = open('found\\' + str(start), 'wb')
+		drive.seek(start-1)
+		while start < end:
+			curPos = drive.tell()
+			cur = drive.read(1)
 
+			if binascii.hexlify(cur) == b'77' and not isdocx:
+				drive.seek(curPos)
+				header = binascii.hexlify(drive.read(5))
+				if header == b'776f72642f':
+					isdocx = True
+					drive.seek(curPos+1)
+
+			if binascii.hexlify(cur) == b'78' and not isxlsx:
+				drive.seek(curPos)
+				header = binascii.hexlify(drive.read(3))
+				if header == b'786c2f':
+					isxlsx = True
+					drive.seek(curPos+1)
+
+			image.write(cur)
+			start += 1
+			prev = cur
+		image.close()
+		if isdocx:
+			os.rename('found\\' + str(start), 'found\\' + str(start) + '.docx')
+			print("Saved ", ".docx", " file!")
+		if isxlsx:
+			os.rename('found\\' + str(start), 'found\\' + str(start) + '.xlsx')
+			print("Saved ", ".docx", " file!")
+
+def main():
+	threads = 0
+	manager = Manager()
 	process = []
+	locations = manager.list()
 	start = time.time()
-
 	### get the file types ###
 	getHeaders()
 	getFooters()
 	getExtensions()
 	##########################
-
+	
 	### searching for signatures ###
 	for x in range(len(headerSign)):
-		locations.append([])
+		locations.append(manager.list())
 
 	for x in range(len(headerSign)):
-		process.append(multiprocessing.Process(target=findSignatures,args=('\\\\.\\E:','E',0,3000000,headerSign[x],footerSign[x],locations[x])))
+		if extensionSign[x] == '.docx':
+			process.append(threading.Thread(target=findSignatures,args=('\\\\.\\E:','E',0,3000000,headerSign[x],footerSign[x],locations[x],20)))
+		else:
+			process.append(threading.Thread(target=findSignatures,args=('\\\\.\\E:','E',0,3000000,headerSign[x],footerSign[x],locations[x],0)))
 
 	for x in range(len(headerSign)):
 		process[x].start()
@@ -175,7 +210,10 @@ if __name__ == '__main__':
 	startRecover = time.time()
 	### recovering files ###
 	for x in range(len(headerSign)):
-		process.append(multiprocessing.Process(target=recoverfile,args=('\\\\.\\E:',locations[x],extensionSign[x].rstrip())))
+		if extension[x] == '.docx':
+			process.append(threading.Thread(target=recoverdocxxlsx,args=('\\\\.\\E:',locations[x])))
+		else:
+			process.append(threading.Thread(target=recoverfile,args=('\\\\.\\E:',locations[x],extensionSign[x].rstrip())))
 
 	for x in range(len(headerSign)):
 		process[x].start()
@@ -183,7 +221,9 @@ if __name__ == '__main__':
 	for x in range(len(headerSign)):
 		process[x].join()
 	########################
-
 	print("total recover time: ", time.time()-startRecover)
 
 	print("total time: ", time.time()-start)
+
+if __name__ == '__main__':
+	pass
