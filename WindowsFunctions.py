@@ -25,6 +25,13 @@ def get_drivesWin():
         bitmask >>= 1
     return drives
 
+def gettotalsectors(path):
+	drive = open(path,'rb')
+	drive.read(40)
+	sectors = int.from_bytes(drive.read(8), byteorder='little')
+	drive.close()
+	return sectors
+
 def getbytespersector(path):
 	sectorsPerCluster = ctypes.c_ulonglong(0)
 	bytesPerSector = ctypes.c_ulonglong(0)
@@ -50,6 +57,13 @@ def getsectorspercluster(path):
 		None,
 	)
 	return sectorsPerCluster.value
+
+def mftlocation(path, rootPath):
+	drive = open(path,'rb')
+	drive.read(48)
+	location = int.from_bytes(drive.read(8),byteorder='little')
+	location *= getsectorspercluster(rootPath)
+	return location
 
 def getHeaders():
 	with open('headers.txt') as openfileobject:
