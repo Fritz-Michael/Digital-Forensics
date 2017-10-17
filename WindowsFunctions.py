@@ -76,13 +76,14 @@ def getExtensions():
 			extensionSign.append(line)
 
 def findSignatures(path, rootPath, startSector, endSector, headers, footers, locHolder, additional):
-	time.sleep(0.2)
+	time.sleep(0.02)
 	bytesPerSector = getbytespersector(rootPath)
 	sectorPerCluster = getsectorspercluster(rootPath)
 	drive = open(path,'rb')
 	cur = b'0'
 	posHeader = 0
 	posFooter = 0
+	maxsize = 1000000
 	while startSector < endSector:
 		drive.seek(int(bytesPerSector*startSector))
 		foundHeader = False
@@ -100,7 +101,8 @@ def findSignatures(path, rootPath, startSector, endSector, headers, footers, loc
 					foundHeader = False
 					break
 			if foundHeader:
-				while not foundFooter:
+				size = 0
+				while not foundFooter and size != maxsize:
 					cur = nextbyte = binascii.hexlify(drive.read(1))
 					if nextbyte == footers[0]:
 						for footer in footers:
@@ -109,16 +111,15 @@ def findSignatures(path, rootPath, startSector, endSector, headers, footers, loc
 								foundFooter = True
 							else:
 								foundFooter = False
+								break
+					size += 1
 				posFooter = drive.tell()
 		startSector += 1
 		if foundHeader and foundFooter:
 			print("huli ka", posHeader, posFooter)
-			locHolder.append((posHeader,posFooter))
+			locHolder.append((posHeader,posFooter+additional))
 	print("Im done", threading.current_thread().name)
 	drive.close()
-
-def finddocxls(path, rootPath, startSector, endSector, headers, footers, locHolder):
-	pass
 
 #thread function
 def recoverfile(path, filepositions, extension):
@@ -127,7 +128,7 @@ def recoverfile(path, filepositions, extension):
 	for fileposition in filepositions:
 		start = fileposition[0]
 		end = fileposition[1]
-		image = open('found\\' + str(start) + extension, 'wb')
+		image = open('found\\' + str(fileposition[0]) + extension, 'wb')
 		drive.seek(start-1)
 		while start < end:
 			cur = drive.read(1)
@@ -139,14 +140,14 @@ def recoverfile(path, filepositions, extension):
 
 def recoverdocxxlsx(path, filepositions):
 	time.sleep(0.2)
-	drive.open(path, 'rb')
+	drive = open(path, 'rb')
 	isdocx = False
 	isxlsx = False
 	prev = ''
 	for fileposition in filepositions:
 		start = fileposition[0]
 		end = fileposition[1]
-		image = open('found\\' + str(start), 'wb')
+		image = open('found\\' + str(fileposition[0]), 'wb')
 		drive.seek(start-1)
 		while start < end:
 			curPos = drive.tell()
@@ -158,6 +159,8 @@ def recoverdocxxlsx(path, filepositions):
 				if header == b'776f72642f':
 					isdocx = True
 					drive.seek(curPos+1)
+				else:
+					drive.seek(curPos+1)
 
 			if binascii.hexlify(cur) == b'78' and not isxlsx:
 				drive.seek(curPos)
@@ -165,17 +168,19 @@ def recoverdocxxlsx(path, filepositions):
 				if header == b'786c2f':
 					isxlsx = True
 					drive.seek(curPos+1)
+				else:
+					drive.seek(curPos+1)
 
 			image.write(cur)
 			start += 1
 			prev = cur
 		image.close()
 		if isdocx:
-			os.rename('found\\' + str(start), 'found\\' + str(start) + '.docx')
+			os.rename('found\\' + str(fileposition[0]), 'found\\' + str(fileposition[0]) + '.docx')
 			print("Saved ", ".docx", " file!")
 		if isxlsx:
-			os.rename('found\\' + str(start), 'found\\' + str(start) + '.xlsx')
-			print("Saved ", ".docx", " file!")
+			os.rename('found\\' + str(fileposition[0]), 'found\\' + str(fileposition[0]) + '.xlsx')
+			print("Saved ", ".xlsx", " file!")
 
 def main():
 	threads = 0
