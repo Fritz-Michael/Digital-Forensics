@@ -16,7 +16,8 @@ headerSign = []
 footerSign = []
 extensionSign = []
 
-def get_drivesWin():
+### GET CURRENT DRIVES
+def get_drivesWin(): 
     drives = []
     bitmask = windll.kernel32.GetLogicalDrives()
     for letter in string.ascii_uppercase:
@@ -25,14 +26,20 @@ def get_drivesWin():
         bitmask >>= 1
     return drives
 
-def gettotalsectors(path):
+### TOTAL NUMBER OF SECTORS NG DRIVE 
+### PARAMETERS 
+	#path-'\\\\.\\E:' 
+def gettotalsectors(path): 
 	drive = open(path,'rb')
 	drive.read(40)
 	sectors = int.from_bytes(drive.read(8), byteorder='little')
 	drive.close()
 	return sectors
 
-def getbytespersector(path):
+### GET BYTES PER SECTOR 
+### PARAMETERS 
+	#path - 'E'
+def getbytespersector(path): 
 	sectorsPerCluster = ctypes.c_ulonglong(0)
 	bytesPerSector = ctypes.c_ulonglong(0)
 	rootPathName = ctypes.c_wchar_p(u"" + path + ":\\")
@@ -45,7 +52,10 @@ def getbytespersector(path):
 	)
 	return bytesPerSector.value
 
-def getsectorspercluster(path):
+### SECTORS PER CLUSTER 
+### PARAMETERS 
+	#path-'E'
+def getsectorspercluster(path): 
 	sectorsPerCluster = ctypes.c_ulonglong(0)
 	bytesPerSector = ctypes.c_ulonglong(0)
 	rootPathName = ctypes.c_wchar_p(u"" + path + ":\\")
@@ -58,13 +68,56 @@ def getsectorspercluster(path):
 	)
 	return sectorsPerCluster.value
 
-def mftlocation(path, rootPath):
+### LOCATION NG MASTER FILE TABLE
+### PARAMETERS
+	#path - '\\\\.\\E:'
+	#rootPath - 'E' 
+def mftlocation(path, rootPath): 
 	drive = open(path,'rb')
 	drive.read(48)
 	location = int.from_bytes(drive.read(8),byteorder='little')
 	location *= getsectorspercluster(rootPath)
+	location *= getbytespersector(rootPath)
+	drive.close()
 	return location
 
+### METADATA (CREATED, LAST MODIFIED, LAST ACCESS)
+### PARAMETERS
+	#path - '\\\\.\\E:'
+	#rootPath - 'E'
+	#mft - location of the master file table
+def getMACtimes(path, rootPath, mft): 
+	drive = open(path,'rb')
+	drive.read(1)
+	mft *= getbytespersector(rootPath)
+	drive.seek(int(mft))
+	drive.read(80)
+	creation = binascii.hexlify(drive.read(8))
+	modified = binascii.hexlify(drive.read(8))
+	access = binascii.hexlify(drive.read(8))
+	drive.close()
+	return (creation,modified,access)
+
+### METADATA (CREATED, LAST MODIFIED, LAST ACCESS)
+### PARAMETERS
+	#path - '\\\\.\\E:'
+	#rootPath - 'E'
+	#mft - location of the master file table
+def getfilename(path, rootPath, mft):
+	drive = open('\\\\.\\E:','rb')
+	drive.read(1)
+	mft *= getbytespersector(rootPath)
+	drive.seek(int(mft))
+	drive.read(240)
+	namesize = drive.read(1)
+	namesize = int.from_bytes(namesize,byteorder='little')
+	print(namesize)
+	drive.read(1)
+	filename = drive.read(namesize*2).decode('utf-8')
+	drive.close()
+	return filename
+
+### save the headers signature to headerSign - global variable
 def getHeaders():
 	with open('headers.txt') as openfileobject:
 		for line in openfileobject:
@@ -72,9 +125,9 @@ def getHeaders():
 			tempLine = line.split()
 			for li in tempLine:
 				temp.append(bytes(li,'utf-8'))
-			#signaturesH.append(temp)
 			headerSign.append(temp)
 
+### save the footers signature to footerSign - global variable
 def getFooters():
 	with open('footers.txt') as openfileobject:
 		for line in openfileobject:
@@ -84,11 +137,22 @@ def getFooters():
 				temp.append(bytes(li,'utf-8'))
 			footerSign.append(temp)
 
+### save the extensions to extensionSign - global variable
 def getExtensions():
 	with open('extensions.txt', 'r') as openfileobject:
 		for line in openfileobject:
 			extensionSign.append(line)
 
+### find the signature of the file in the multiple block section
+### PARAMETERS
+	#path - '\\\\.\\E:'
+	#rootPath - 'E'
+	#startSector - starting sector
+	#endSector - last sector, use gettotalsector function
+	#headers - the header of the file type
+	#footers - footer of the file type
+	#locHolder - list that will contain the position of header and footer
+	#additional - docx and xlsx file have an additional 18 offset
 def findSignatures(path, rootPath, startSector, endSector, headers, footers, locHolder, additional):
 	time.sleep(0.02)
 	bytesPerSector = getbytespersector(rootPath)
@@ -135,7 +199,11 @@ def findSignatures(path, rootPath, startSector, endSector, headers, footers, loc
 	print("Im done", threading.current_thread().name)
 	drive.close()
 
-#thread function
+### function that will recover files
+### PARAMETERS
+	#path - '\\\\.\\E:'
+	#filepositions - 'list containing the file positions'
+	#extension - file extension of the file type to be recovered
 def recoverfile(path, filepositions, extension):
 	time.sleep(0.02)
 	drive = open(path, 'rb')
@@ -152,6 +220,10 @@ def recoverfile(path, filepositions, extension):
 		print("Saved ", extension, " file!")
 	drive.close()
 
+### function that will recover docx and xlsx files
+### PARAMETER
+	#path - '\\\\.\\E:'
+	#filepositions - list of the filepositions containing docx and xlsx
 def recoverdocxxlsx(path, filepositions):
 	time.sleep(0.2)
 	drive = open(path, 'rb')
@@ -245,4 +317,5 @@ def main():
 	print("total time: ", time.time()-start)
 
 if __name__ == '__main__':
-	pass
+	temp = mftlocation('\\\\.\\E:','E')
+	print(temp)
