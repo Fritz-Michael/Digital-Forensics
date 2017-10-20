@@ -1,5 +1,6 @@
 import string
 import time
+import datetime
 import os
 import platform
 import operator
@@ -10,6 +11,7 @@ import ctypes
 from WindowsFunctions import *
 import multiprocessing
 from multiprocessing import Manager
+import struct
 
 #### GLOBAL VARIABLES ####
 headerSign = []
@@ -81,6 +83,15 @@ def mftlocation(path, rootPath):
 	drive.close()
 	return location
 
+### converts filetime to datetime object
+### PARAMETERS
+	#filetime - bytes that represent the filetime
+def gettime(filetime):
+    Ftime = int(struct.unpack('<Q', filetime)[0])
+    Epoch = divmod(Ftime - 116444736000000000, 10000000)
+    Actualtime = datetime.datetime.fromtimestamp(Epoch[0])
+    return Actualtime.strftime('%Y-%m-%d %H:%M:%S')
+
 ### METADATA (CREATED, LAST MODIFIED, LAST ACCESS)
 ### PARAMETERS
 	#path - '\\\\.\\E:'
@@ -88,15 +99,13 @@ def mftlocation(path, rootPath):
 	#mft - location of the master file table
 def getMACtimes(path, rootPath, mft): 
 	drive = open(path,'rb')
-	drive.read(1)
-	mft *= getbytespersector(rootPath)
 	drive.seek(int(mft))
 	drive.read(80)
-	creation = binascii.hexlify(drive.read(8))
-	modified = binascii.hexlify(drive.read(8))
-	access = binascii.hexlify(drive.read(8))
+	create = drive.read(8)
+	modified = drive.read(8)
+	access = drive.read(8)
 	drive.close()
-	return (creation,modified,access)
+	return (gettime(create),gettime(modified),gettime(access))
 
 ### METADATA (CREATED, LAST MODIFIED, LAST ACCESS)
 ### PARAMETERS
@@ -317,5 +326,7 @@ def main():
 	print("total time: ", time.time()-start)
 
 if __name__ == '__main__':
-	temp = mftlocation('\\\\.\\E:','E')
-	print(temp)
+	temp = mftlocation('\\\\.\\C:','C')
+	times = getMACtimes('\\\\.\\C:', 'C',temp)
+
+	print(gettime(b'\x00\x38\xe3\x93\x8a\xb1\xd1\x01'))
