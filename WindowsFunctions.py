@@ -329,4 +329,4 @@ if __name__ == '__main__':
 	temp = mftlocation('\\\\.\\C:','C')
 	times = getMACtimes('\\\\.\\C:', 'C',temp)
 
-	print(gettime(b'\x00\x38\xe3\x93\x8a\xb1\xd1\x01'))
+	print(times)
