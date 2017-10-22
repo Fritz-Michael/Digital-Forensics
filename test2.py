@@ -7,9 +7,10 @@ import threading
 import binascii
 from ctypes import windll
 import ctypes
-
+import datetime
 import multiprocessing
 from multiprocessing import Manager
+import struct
 
 def gettotalsectors(path):
 	drive = open(path,'rb')
@@ -58,11 +59,20 @@ def getMACtimes(path, rootPath, mft):
 	mft *= getbytespersector(rootPath)
 	drive.seek(int(mft))
 	drive.read(80)
-	creation = binascii.hexlify(drive.read(8))
-	modified = binascii.hexlify(drive.read(8))
-	access = binascii.hexlify(drive.read(8))
+	create = drive.read(8)
+	modified = drive.read(8)
+	access = drive.read(8)
 	drive.close()
-	return (creation,modified,access)
+	return (gettime(create),gettime(modified),gettime(access))
+
+### converts filetime to datetime object
+### PARAMETERS
+	#filetime - bytes that represent the filetime
+def gettime(filetime):
+    Ftime = int(struct.unpack('<Q', filetime)[0])
+    Epoch = divmod(Ftime - 116444736000000000, 10000000)
+    Actualtime = datetime.datetime.fromtimestamp(Epoch[0])
+    return Actualtime.strftime('%Y-%m-%d %H:%M:%S')
 
 def getfilename(path, rootPath, mft):
 	drive = open(path,'rb')
@@ -77,66 +87,28 @@ def getfilename(path, rootPath, mft):
 		offset = 232
 		drive.read(offset)
 		nfile = True
-		# namesize = drive.read(1)
-		# namesize = int.from_bytes(namesize,byteorder='little')
-		# print(namesize)
-		# print(offset)
-		# filename = drive.read(namesize*2).decode('utf-16')
-		# drive.close()
-		# return filename
 
 	else: #fnames below 32
 		drive.seek(int(mft))
 		offset = 240
 		drive.read(offset)
 
-	 #360 , 240 , 216/215 short files
-	# x = 0
-	# while x != 240:
-	# 	print(drive.read(1), 'Byte loc: ', x)
-	# 	x+=1
-	# 	a=input('pause')
-
 	namesize = drive.read(1)
-	if int.from_bytes(namesize,byteorder='little') > 32 and nfile == False or int.from_bytes(namesize,byteorder='little') == 0 and nfile == False:
 
+	if int.from_bytes(namesize,byteorder='little') > 32 and nfile == False or int.from_bytes(namesize,byteorder='little') == 0 and nfile == False:
 		offset = 216
 		drive.seek(int(mft))
 		drive.read(offset)
 		namesize = drive.read(1)
 
-
-
-	# if int.from_bytes(namesize,byteorder='little') == 12: #long filename offset 360
-
-	# 	offset = 360
-	# 	drive.seek(int(mft))
-	# 	drive.read(offset)
-	# 	namesize = drive.read(1)
-
-
 	namesize = int.from_bytes(namesize,byteorder='little')
-
-	# print(namesize)
-	# print(offset)
 	drive.read(1)
 	filename = drive.read(namesize*2).decode('utf-16')
 
 	if filename.find("~",0, namesize) == -1:
 		drive.close()
 		return filename
-	# drive.read(1)
-	# filename = drive.read(namesize*2).decode('utf-16')
-	# drive.close()
-	# return filename
-	# if namesize <= 32 and namesize != 0:
-	# 	drive.read(1)
-	# 	filename = drive.read(namesize*2).decode('utf-16')
-	# 	drive.close()
-	# 	return filename
 	else:
-		# print('Index: ', filename.find("~",0, namesize))
-		# print('burat found')
 		if offset == 240 and namesize != 12: #folder directory offset 352
 			offset = 352
 			drive.seek(int(mft))
@@ -159,7 +131,6 @@ def getfilename(path, rootPath, mft):
 			drive.close()
 			return filename
 
-
 		drive.close()
 		return None
 	
@@ -167,12 +138,12 @@ def getfilename(path, rootPath, mft):
 def getmetadata(path, rootpath):
 	drive = open(path, 'rb')
 	currsec = mftlocation(path, rootpath)
-
 	ncount = 0
 	x = 0
 	ifMFTtable = True
 	fnameMeta = []
 	dateMeta = []
+
 	while ifMFTtable:
 		currboff = getbytespersector(rootpath) * currsec
 		drive.seek(currboff)
@@ -182,12 +153,12 @@ def getmetadata(path, rootpath):
 			print('Current Sector: ',currsec)
 			
 			fname = getfilename(path, rootpath, currsec)
-			fdate =
+			fdate = getMACtimes(path, rootpath, currsec)
 			if fname == None:
 				ncount +=1
 			if fname != None:
 				fnameMeta.append(fname)
-				# dateMeta.append(getMACtimes(path, rootpath, currsec))
+				dateMeta.append(fdate)
 			# print(x)
 
 			x+=1
@@ -204,14 +175,11 @@ def getmetadata(path, rootpath):
 
 	for num in fnameMeta:
 		print(num)
+	for wat in fdate:
+		print(wat)
 	drive.close()
 
 
 if __name__ == '__main__':
 	getmetadata('\\\\.\\H:', 'H')
 
-
-
-	#rootpath ==> path letter
-	#additional ???
-	#locHolder.append((posHeader,posFooter+additional)) tuple ba ito???
