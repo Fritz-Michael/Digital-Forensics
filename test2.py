@@ -152,8 +152,17 @@ def getmetadata(path, rootpath):
 		if fbyte == 'FILE':
 			print('Current Sector: ',currsec)
 			
-			fname = getfilename(path, rootpath, currsec)
-			fdate = getMACtimes(path, rootpath, currsec)
+			try:
+				fname = getfilename(path, rootpath, currsec)
+			except UnicodeDecodeError:
+				fname = None
+
+			try:
+				fdate = getMACtimes(path, rootpath, currsec)
+			except OSError:
+				fdate = None
+				
+			print(fdate)
 			if fname == None:
 				ncount +=1
 			if fname != None:
@@ -181,5 +190,5 @@ def getmetadata(path, rootpath):
 
 
 if __name__ == '__main__':
-	getmetadata('\\\\.\\H:', 'H')
+	getmetadata('\\\\.\\C:', 'C')
 
