@@ -634,15 +634,14 @@ def bulalords():
 				else:
 					process.append(multiprocessing.Process(target=findSignatures,args=(path,rootPath,startSector,endSector,headerSign[x],footerSign[x],locations[x],0)))
 	
-			for x in range(len(headerSign)):
+			for x in range(len(process)):
 				process[x].start()
-			for x in range(len(headerSign)):
+			for x in range(len(process)):
 				process[x].join()
 			###############################
 			
 			metadata = getmetadata(path,rootPath)
 			print('Drive scanning took:', time.time()-start)
-			print(metadata[1][0])
 			
 		elif chosenMenuButton == menuOption[5]:
 			dirSave = diropenbox(msgFolder, title)
