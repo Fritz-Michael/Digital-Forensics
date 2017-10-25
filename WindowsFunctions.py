@@ -118,7 +118,7 @@ def mftlocation(path, rootPath):
 	drive.read(48)
 	location = int.from_bytes(drive.read(8),byteorder='little')
 	location *= getsectorspercluster(rootPath)
-	location *= getbytespersector(rootPath)
+	# location *= getbytespersector(rootPath)
 	drive.close()
 	return location
 
@@ -227,14 +227,29 @@ def getmetadata(path, rootpath):
 	ifMFTtable = True
 	print(currsec)
 	while ifMFTtable:
+		if x == 16:
+			currsec += 16
 		currboff = getbytespersector(rootpath) * currsec
 		drive.seek(currboff)
 		fbyte = drive.read(4).decode('utf-8')
 		print(fbyte)
 		if fbyte == 'FILE':
 			print('Current Sector: ',currsec)
-			fname = getfilename(path, rootpath, currsec)
-			fdate = getMACtimes(path, rootpath, currsec)
+
+			try:
+				fname = getfilename(path, rootpath, currsec)
+			except UnicodeDecodeError as e:
+				fname = None
+				print(e)
+			except BaseException:
+				fname = None
+
+			try:
+				fdate = getMACtimes(path, rootpath, currsec)
+			except OSError:
+				fdate = None
+			except BaseException:
+				fdate = None
 
 			if fname == None:
 				ncount +=1
@@ -332,6 +347,7 @@ def findSignatures(path, rootPath, startSector, endSector, headers, footers, loc
 				posFooter = drive.tell()
 		startSector += 1
 		if foundHeader and foundFooter:
+			print(posHeader,posFooter)
 			locHolder.append((posHeader,posFooter+additional))
 	print("Im done", threading.current_thread().name)
 	drive.close()
@@ -616,6 +632,7 @@ def bulalords():
 			
 		elif chosenMenuButton == menuOption[4]:
 			dirSave = diropenbox(msgFolder, title)
+			os.mkdir(dirSave + '\\found')
 		elif chosenMenuButton == menuOption[5]:
 			exit()
 			
