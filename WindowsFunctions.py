@@ -508,7 +508,7 @@ def bulalords():
 						start = time.time()
 						### recovering files ###
 						for x in range(len(index)):
-							if extensionSign[index[x]] == 'docx':
+							if extensionSign[index[x]] == '.docx':
 								process.append(multiprocessing.Process(target=recoverdocxxlsx,args=(path,locations[index[x]],dirSave)))
 							else:
 								process.append(multiprocessing.Process(target=recoverfile,args=(path,locations[index[x]],extensionSign[index[x]].rstrip(),dirSave)))
