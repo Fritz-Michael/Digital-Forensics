@@ -366,7 +366,7 @@ def recoverfile(path, filepositions, extension, folder):
 	for fileposition in filepositions:
 		start = fileposition[0]
 		end = fileposition[1]
-		image = open(folder + '\\found\\' + str(fileposition[0]) + '.' + extension, 'wb')
+		image = open(folder + '\\found\\' + str(fileposition[0]) + extension, 'wb')
 		drive.seek(start-1)
 		while start < end:
 			cur = drive.read(1)
@@ -428,13 +428,13 @@ def recoverdocxxlsx(path, filepositions, folder):
 			prev = cur
 		image.close()
 		if isdocx:
-			os.rename(folder + '\\found\\' + str(fileposition[0]), folder + '\\found\\' + 'docx\\' + str(fileposition[0]) + '.docx')
+			os.rename(folder + '\\found\\' + str(fileposition[0]), folder + '\\found\\' + str(fileposition[0]) + '.docx')
 			print("Saved ", ".docx", " file!")
 		if isxlsx:
-			os.rename(folder + '\\found\\' + str(fileposition[0]), folder + '\\found\\' + 'xlsx\\' + str(fileposition[0]) + '.xlsx')
+			os.rename(folder + '\\found\\' + str(fileposition[0]), folder + '\\found\\' + str(fileposition[0]) + '.xlsx')
 			print("Saved ", ".xlsx", " file!")
 		if ispptx:
-			os.rename(folder + '\\found\\' + str(fileposition[0]), folder + '\\found\\' + 'pptx\\' + str(fileposition[0]) + '.pptx')
+			os.rename(folder + '\\found\\' + str(fileposition[0]), folder + '\\found\\' + str(fileposition[0]) + '.pptx')
 			print("Saved ", ".pptx", " file!")
 
 def bulalords():
@@ -463,11 +463,14 @@ def bulalords():
 	directoryHere = []
 	chosenMenuButton = 0
 	chosenMenu2Button = 0
-	menuOption = ["Start Retrieving", "Data Types to Recover", "Enter Starting Sector", "Enter Ending Sector", "Locate The Directory You Want Files Recovered", "Select Directory You Want Recovered Files Saved", "Exit Program"]
+	menuOption = ["Start Retrieving", "Data Types to Recover", "Input Thread Count", "Enter Starting Sector", "Enter Ending Sector", "Locate The Directory You Want Files Recovered", "Select Directory You Want Recovered Files Saved", "Exit Program"]
 	menu2Option = ["Restart Program", "Recovered File Name Lists", "Image File List", "All files recovered", "Exit Program"]
 	choosingFile= [hack,baywatch, tech]
 	imageList = []
 	fileListRecovered = []
+	startSector = 0
+	endSector = 0
+	threadCount = 0
 	dataTypes = None
 	rootPath = None
 	dirSave = None
@@ -489,8 +492,6 @@ def bulalords():
 						#app = QApplication(sys.argv)
 						#appMe = App()
 						#appMe.show()
-						for datatype in dataTypes:
-							os.mkdir(dirSave + '\\found\\' + datatype)
 						
 						### recover files here
 						process = []
@@ -572,18 +573,18 @@ def bulalords():
 		elif chosenMenuButton == menuOption[1]:
 			dataTypes= multchoicebox(msgDataType, title, extensionSign)
 		elif chosenMenuButton == menuOption[2]:
-			startSector = integerbox(msgStartSector, title,  default=0, lowerbound=0, upperbound=9999999) ### STARTING SECTOR HERE
+			threadCount = integerbox(msgThreader, title,  default=0, lowerbound=0, upperbound=9999999) ### input thread HERE
 		elif chosenMenuButton == menuOption[3]:
-			endSector = integerbox(msgEndSector, title,  default=0, lowerbound=0, upperbound=9999999) ### ENDING SECTOR HERE
+			startSector = integerbox(msgStartSector, title,  default=0, lowerbound=0, upperbound=9999999) ### STARTING SECTOR HERE
 		elif chosenMenuButton == menuOption[4]:
+			endSector = integerbox(msgEndSector, title,  default=0, lowerbound=0, upperbound=9999999) ### ENDING SECTOR HERE
+		elif chosenMenuButton == menuOption[5]:
 			rootPath = choicebox(msgDrive, title, directoryHere)
-			
+			path = '\\\\.\\' + rootPath + ':'
 			if startSector == 0:
 				startSector = 512
 			if endSector == 0:
 				endSector = gettotalsectors(path)
-
-			path = '\\\\.\\' + rootPath + ':'
 			str(path)
 			print(path)
 			manager = Manager()
@@ -609,10 +610,10 @@ def bulalords():
 			metadata = getmetadata(path,rootPath)
 			print('Drive scanning took:', time.time()-start)
 			
-		elif chosenMenuButton == menuOption[5]:
+		elif chosenMenuButton == menuOption[6]:
 			dirSave = diropenbox(msgFolder, title)
 			os.mkdir(dirSave + '\\found')
-		elif chosenMenuButton == menuOption[6]:
+		elif chosenMenuButton == menuOption[7]:
 			exit()
 			
 if __name__ == '__main__':
