@@ -138,7 +138,7 @@ def gettime(filetime):
 	#mft - location of the master file table
 def getMACtimes(path, rootPath, mft): 
 	drive = open(path,'rb')
-	drive.seek(int(mft))
+	drive.seek(mft*getbytespersector(rootPath))
 	drive.read(80)
 	create = drive.read(8)
 	modified = drive.read(8)
