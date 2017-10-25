@@ -1,8 +1,8 @@
-.png
-.jpg
-.pdf
-.docx
-.doc
-.xls
-.gif
-.rtf
+png
+jpg
+pdf
+docx
+doc
+xls
+gif
+rtf
