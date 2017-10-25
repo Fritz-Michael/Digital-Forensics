@@ -265,11 +265,14 @@ def getmetadata(path, rootpath):
 		else:
 			ifMFTtable = False
 			print('pepe si jarold')
+	for x in fnameMeta:
+		print(x)
 	print('Number of MFT Entries: ',x)	
 	print('Number of None: ', ncount)
 
 	drive.close()
-
+	return (fnameMeta, dateMeta)
+	
 ### save the headers signature to headerSign - global variable
 def getHeaders():
 	with open('headers.txt') as openfileobject:
@@ -314,7 +317,7 @@ def findSignatures(path, rootPath, startSector, endSector, headers, footers, loc
 	cur = b'0'
 	posHeader = 0
 	posFooter = 0
-	maxsize = 1000000
+	maxsize = 100
 	while startSector < endSector:
 		drive.seek(int(bytesPerSector*startSector))
 		foundHeader = False
@@ -382,7 +385,6 @@ def recoverdocxxlsx(path, filepositions, folder):
 	drive = open(path, 'rb')
 	isdocx = False
 	isxlsx = False
-	ispptx = False
 	prev = ''
 	for fileposition in filepositions:
 		start = fileposition[0]
@@ -411,15 +413,6 @@ def recoverdocxxlsx(path, filepositions, folder):
 				else:
 					drive.seek(curPos+1)
 
-			if binascii.hexlify(cur) == b'70' and not ispptx:
-				drive.seek(curPos)
-				header = binascii.hexlify(drive.read(4))
-				if header == b'7070742f':
-					isxlsx = True
-					drive.seek(curPos+1)
-				else:
-					drive.seek(curPos+1)
-
 			image.write(cur)
 			start += 1
 			prev = cur
@@ -430,9 +423,54 @@ def recoverdocxxlsx(path, filepositions, folder):
 		if isxlsx:
 			os.rename(folder + '\\found\\' + str(fileposition[0]), folder + '\\found\\' + str(fileposition[0]) + '.xlsx')
 			print("Saved ", ".xlsx", " file!")
-		if ispptx:
-			os.rename(folder + '\\found\\' + str(fileposition[0]), folder + '\\found\\' + str(fileposition[0]) + '.pptx')
-			print("Saved ", ".pptx", " file!")
+
+def main():
+	threads = 0
+	manager = Manager()
+	process = []
+	locations = manager.list()
+	start = time.time()
+	### get the file types ###
+	getHeaders()
+	getFooters()
+	getExtensions()
+	##########################
+	
+	### searching for signatures ###
+	for x in range(len(headerSign)):
+		locations.append(manager.list())
+
+	for x in range(len(headerSign)):
+		if extensionSign[x] == '.docx':
+			process.append(threading.Thread(target=findSignatures,args=('\\\\.\\E:','E',0,3000000,headerSign[x],footerSign[x],locations[x],20)))
+		else:
+			process.append(threading.Thread(target=findSignatures,args=('\\\\.\\E:','E',0,3000000,headerSign[x],footerSign[x],locations[x],0)))
+
+	for x in range(len(headerSign)):
+		process[x].start()
+
+	for x in range(len(headerSign)):
+		process[x].join()
+	###############################
+
+	process = []
+	startRecover = time.time()
+	### recovering files ###
+	for x in range(len(headerSign)):
+		if extension[x] == '.docx':
+			process.append(threading.Thread(target=recoverdocxxlsx,args=('\\\\.\\E:',locations[x])))
+		else:
+			process.append(threading.Thread(target=recoverfile,args=('\\\\.\\E:',locations[x],extensionSign[x].rstrip())))
+
+	for x in range(len(headerSign)):
+		process[x].start()
+
+	for x in range(len(headerSign)):
+		process[x].join()
+	########################
+	print("total recover time: ", time.time()-startRecover)
+
+	print("total time: ", time.time()-start)
 
 def bulalords():
 	hack = "hacker.jpg"
@@ -451,13 +489,16 @@ def bulalords():
 	msgThreader = "Input Thread Count"
 	msgFolder = "Select Directory To Save Files Recovered" 
 	msgOpenDirectory = "Open the directory you want to open"
+	msgFileRecovered = "These are all the files you have recovered"
+	msgStartSector = "Please input starting sector #"
+	msgEndSector = "Please input ending sector #"
 	title = "FILE RETRIEVER"
 	dataTypeOptions = ['JPG','PNG','PDF','DOC','DOCX','XLS','XLSX']
 	chosenFiles = []
 	directoryHere = []
 	chosenMenuButton = 0
 	chosenMenu2Button = 0
-	menuOption = ["Start Retrieving", "Data Types to Recover", "Thread Count for Recovering", "Locate The Directory You Want Files Recovered", "Select Directory You Want Recovered Files Saved", "Exit Program"]
+	menuOption = ["Start Retrieving", "Data Types to Recover", "Enter Starting Sector", "Enter Ending Sector", "Locate The Directory You Want Files Recovered", "Select Directory You Want Recovered Files Saved", "Exit Program"]
 	menu2Option = ["Restart Program", "Recovered File Name Lists", "Image File List", "All files recovered", "Exit Program"]
 	choosingFile= [hack,baywatch, tech]
 	imageList = []
@@ -500,7 +541,7 @@ def bulalords():
 						start = time.time()
 						### recovering files ###
 						for x in range(len(index)):
-							if extensionSign[index[x]] == '.docx' or extensionSign[index[x]] == '.xlsx' or extensionSign[index[x]] == '.pptx':
+							if extensionSign[index[x]] == '.docx':
 								process.append(multiprocessing.Process(target=recoverdocxxlsx,args=(path,locations[index[x]],dirSave)))
 							else:
 								process.append(multiprocessing.Process(target=recoverfile,args=(path,locations[index[x]],extensionSign[index[x]].rstrip(),dirSave)))
@@ -521,20 +562,23 @@ def bulalords():
 						for imageName in glob.glob(dirSaveJpg):
 							imageList.append(imageName)
 							fileListRecovered.append(imageName)
-						dirSavePdf = dirSave + "/*.pdf"
+						dirSavePdf = dirSave + '//found' +"/*.pdf"
 						for fileName in glob.glob(dirSavePdf):
 							fileListRecovered.append(fileName)
-						dirSaveDoc = dirSave + "/*.doc"
+						dirSaveDoc = dirSave + '//found' + "/*.doc"
 						for fileName in glob.glob(dirSaveDoc):
 							fileListRecovered.append(fileName)
-						dirSaveDocx = dirSave + "/*.docx"
+						dirSaveDocx = dirSave + '//found' + "/*.docx"
 						for fileName in glob.glob(dirSaveDocx):
 							fileListRecovered.append(fileName)
-						dirSaveXls = dirSave + "/*.xls"
+						dirSaveXls = dirSave + '//found' + "/*.xls"
 						for fileName in glob.glob(dirSaveXls):
 							fileListRecovered.append(fileName)
-						dirSaveXlsx = dirSave + "/*.xlsx"
-						for fileName in glob.glob(dirSaveXlsx):
+						dirSaveGif = dirSave + '//found' + "/*.gif"
+						for fileName in glob.glob(dirSaveGif):
+							fileListRecovered.append(fileName)
+						dirSaveRtf = dirSave + '//found' + "/*.rtf"
+						for fileName in glob.glob(dirSaveRtf):
 							fileListRecovered.append(fileName)
 						while chosenMenu2Button != 1:
 							chosenMenu2Button = buttonbox(title, msgMenu, image="9328518_orig.png", choices = menu2Option)
@@ -543,7 +587,7 @@ def bulalords():
 							elif chosenMenu2Button == menu2Option[1]:
 								nameList= choicebox(msgMetadata, title, imageList)
 							elif chosenMenu2Button == menu2Option[3]:
-								filesListed= choicebox(msgMetadata, title, fileListRecovered)
+								filesListed= choicebox(msgFileRecovered, title, fileListRecovered)
 							elif chosenMenu2Button == menu2Option[2]:
 								imageChosen = choicebox(msgImage, title, imageList)
 								if imageList:
@@ -562,8 +606,10 @@ def bulalords():
 		elif chosenMenuButton == menuOption[1]:
 			dataTypes= multchoicebox(msgDataType, title, extensionSign)
 		elif chosenMenuButton == menuOption[2]:
-			threadCount = integerbox(msgThreader, title,  default=10, lowerbound=0, upperbound=99999)
+			startSector = integerbox(msgStartSector, title,  default=0, lowerbound=0, upperbound=9999999) ### STARTING SECTOR HERE
 		elif chosenMenuButton == menuOption[3]:
+			endSector = integerbox(msgEndSector, title,  default=0, lowerbound=0, upperbound=9999999) ### ENDING SECTOR HERE
+		elif chosenMenuButton == menuOption[4]:
 			rootPath = choicebox(msgDrive, title, directoryHere)
 			
 			path = '\\\\.\\' + rootPath + ':'
@@ -578,27 +624,25 @@ def bulalords():
 				locations.append(manager.list())
 			start = time.time()
 			for x in range(len(headerSign)):
-				if extensionSign[x] == '.docx' or extensionSign[x] == '.xlsx' or extensionSign[x] == '.pptx':
+				if extensionSign[x] == '.docx':
 					process.append(multiprocessing.Process(target=findSignatures,args=(path,rootPath,0,gettotalsectors(path),headerSign[x],footerSign[x],locations[x],20)))
 				else:
 					process.append(multiprocessing.Process(target=findSignatures,args=(path,rootPath,0,gettotalsectors(path),headerSign[x],footerSign[x],locations[x],0)))
-			
-			
-			
+	
 			for x in range(len(headerSign)):
 				process[x].start()
-
 			for x in range(len(headerSign)):
 				process[x].join()
 			###############################
 			
-			getmetadata(path,rootPath)
+			metadata = getmetadata(path,rootPath)
 			print('Drive scanning took:', time.time()-start)
+			print(metadata[1][0])
 			
-		elif chosenMenuButton == menuOption[4]:
+		elif chosenMenuButton == menuOption[5]:
 			dirSave = diropenbox(msgFolder, title)
 			os.mkdir(dirSave + '\\found')
-		elif chosenMenuButton == menuOption[5]:
+		elif chosenMenuButton == menuOption[6]:
 			exit()
 			
 if __name__ == '__main__':
