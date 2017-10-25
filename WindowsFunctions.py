@@ -612,6 +612,11 @@ def bulalords():
 		elif chosenMenuButton == menuOption[4]:
 			rootPath = choicebox(msgDrive, title, directoryHere)
 			
+			if startSector == 0:
+				startSector = 512
+			if endSector == 0:
+				endSector = gettotalsectors(path)
+
 			path = '\\\\.\\' + rootPath + ':'
 			str(path)
 			print(path)
@@ -625,9 +630,9 @@ def bulalords():
 			start = time.time()
 			for x in range(len(headerSign)):
 				if extensionSign[x] == '.docx':
-					process.append(multiprocessing.Process(target=findSignatures,args=(path,rootPath,0,gettotalsectors(path),headerSign[x],footerSign[x],locations[x],20)))
+					process.append(multiprocessing.Process(target=findSignatures,args=(path,rootPath,startSector,endSector,headerSign[x],footerSign[x],locations[x],20)))
 				else:
-					process.append(multiprocessing.Process(target=findSignatures,args=(path,rootPath,0,gettotalsectors(path),headerSign[x],footerSign[x],locations[x],0)))
+					process.append(multiprocessing.Process(target=findSignatures,args=(path,rootPath,startSector,endSector,headerSign[x],footerSign[x],locations[x],0)))
 	
 			for x in range(len(headerSign)):
 				process[x].start()
