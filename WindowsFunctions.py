@@ -15,8 +15,9 @@ import multiprocessing
 from multiprocessing import Manager
 import struct
 from easygui import *
-from PyQt5.QtWidgets import QApplication, QProgressBar, QWidget, QPushButton, QMainWindow, QLabel
+from PyQt5.QtWidgets import QApplication, QProgressBar, QWidget, QPushButton, QMainWindow, QLabel, QTableWidget, QTableWidgetItem, QVBoxLayout
 from PyQt5.QtCore import QBasicTimer, QCoreApplication
+
 
 #### GLOBAL VARIABLES ####
 headerSign = []
@@ -24,12 +25,15 @@ footerSign = []
 extensionSign = []
 fnameMeta = []
 dateMeta = []
+CREATED = 0
+MODIFIED = 1
+ACCESSED = 2
 
 class App(QMainWindow):
 	
 	def __init__(self, label):
 		super().__init__()
-		self.factor = 0.0001
+		self.factor = 0.00001
 		self.completed = 0
 		self.setWindowTitle("FORENSC : Data Carving")
 		self.label = QLabel(self)
@@ -56,7 +60,28 @@ class App(QMainWindow):
 			self.completed += self.factor
 			self.progressBar.setValue(self.completed)
 		self.close()		
+
+class Table(QWidget):
+	def __init__(self):
+		super().__init__()
+		self.title = "FORENSC: DATA CARVING"
+		self.initUI()
+	
+	def initUI(self):
+		self.setWindowTitle("FORENSC : Data Carving")
+		self.setGeometry(20, 20, 640, 400)
+		self.createTable()
+		self.layout = QVBoxLayout()
+		self.layout.addWidget(self.tableWidget)
+		self.setLayout(self.layout)
+		self.show()
 		
+	def createTable(self):
+		self.tableWidget = QTableWidget()
+		self.tableWidget.setRowCount(12)
+		self.tableWidget.setColumnCount(4)
+		self.tableWidget.setItem(0, 0, QTableWidgetItem("Cell (1,1)1231231231231231312"))
+
 ### GET CURRENT DRIVES
 def get_drivesWin(): 
     drives = []
@@ -317,7 +342,7 @@ def findSignatures(path, rootPath, startSector, endSector, headers, footers, loc
 	cur = b'0'
 	posHeader = 0
 	posFooter = 0
-	maxsize = 100
+	maxsize = 1000000000
 	while startSector < endSector:
 		drive.seek(int(bytesPerSector*startSector))
 		foundHeader = False
@@ -366,7 +391,7 @@ def recoverfile(path, filepositions, extension, folder):
 	for fileposition in filepositions:
 		start = fileposition[0]
 		end = fileposition[1]
-		image = open(folder + '\\found\\' + str(fileposition[0]) + extension, 'wb')
+		image = open(folder + '\\found\\' + str(fileposition[0]) + '.' + extension, 'wb')
 		drive.seek(start-1)
 		while start < end:
 			cur = drive.read(1)
@@ -428,13 +453,13 @@ def recoverdocxxlsx(path, filepositions, folder):
 			prev = cur
 		image.close()
 		if isdocx:
-			os.rename(folder + '\\found\\' + str(fileposition[0]), folder + '\\found\\' + str(fileposition[0]) + '.docx')
+			os.rename(folder + '\\found\\' + str(fileposition[0]), folder + '\\found\\' + 'docx\\' + str(fileposition[0]) + '.docx')
 			print("Saved ", ".docx", " file!")
 		if isxlsx:
-			os.rename(folder + '\\found\\' + str(fileposition[0]), folder + '\\found\\' + str(fileposition[0]) + '.xlsx')
+			os.rename(folder + '\\found\\' + str(fileposition[0]), folder + '\\found\\' + 'xlsx\\' + str(fileposition[0]) + '.xlsx')
 			print("Saved ", ".xlsx", " file!")
 		if ispptx:
-			os.rename(folder + '\\found\\' + str(fileposition[0]), folder + '\\found\\' + str(fileposition[0]) + '.pptx')
+			os.rename(folder + '\\found\\' + str(fileposition[0]), folder + '\\found\\' + 'pptx\\' + str(fileposition[0]) + '.pptx')
 			print("Saved ", ".pptx", " file!")
 
 def bulalords():
@@ -445,7 +470,7 @@ def bulalords():
 	msgActivity = "Wait for the files to recover before pressing next"
 	msgMenu = "Set The Parameters For a Customized Retrieving"
 	msgMetadata = "This is all the metadata you have recovered"
-	msgDrive = "Welcome, I am the File Retriever-\nThis is the list of Active Drives\n\nSelect the directory that contains the deleted file you want to recover\nTo exit, click the CANCEL button or press the ESC key."
+	msgDrive = "Welcome, I am the File Retriever-\nThis is the list of Active Drives\n\nSelect the directory that contains the deleted file you want to recover\nTo You do not have permission to send messages in this channel.exit, click the CANCEL button or press the ESC key."
 	msgSelectImage = "Select an Image file to preview"
 	msgPreview = "This is the preview of the selected image"
 	msgDataType = "Welcome, I am the File Retriever-\nThis is your list of retrievable file types\n\nSelect the data types you want recovered. \nTo exit, click the CANCEL button or press the ESC key."
@@ -484,14 +509,19 @@ def bulalords():
 	getExtensions()
 	#print(len(headerSign))
 	while chosenMenuButton != 1:
+		#app = QApplication(sys.argv)
+		#ex = Table()
+		#ex.show()
+		#app = QApplication(sys.argv)
+		#appMe = App("Scanning Drive")
+		#appMe.show()
 		chosenMenuButton = buttonbox(title, msgMenu, image="9328518_orig.png", choices = menuOption)
 		if chosenMenuButton == menuOption[0]:
 			if dataTypes != None:
 				if dirSave != None:
 					if rootPath != None:
-						#app = QApplication(sys.argv)
-						#appMe = App()
-						#appMe.show()
+						for datatype in dataTypes:
+							os.mkdir(dirSave + '\\found\\' + datatype)
 						
 						### recover files here
 						process = []
@@ -508,7 +538,7 @@ def bulalords():
 						start = time.time()
 						### recovering files ###
 						for x in range(len(index)):
-							if extensionSign[index[x]] == '.docx':
+							if extensionSign[index[x]] == 'docx':
 								process.append(multiprocessing.Process(target=recoverdocxxlsx,args=(path,locations[index[x]],dirSave)))
 							else:
 								process.append(multiprocessing.Process(target=recoverfile,args=(path,locations[index[x]],extensionSign[index[x]].rstrip(),dirSave)))
@@ -552,7 +582,9 @@ def bulalords():
 							if chosenMenu2Button == menu2Option[0]:
 								chosenMenu2Button = 1 
 							elif chosenMenu2Button == menu2Option[1]:
-								nameList= choicebox(msgMetadata, title, imageList)
+								app = QApplication(sys.argv)
+								ex = Table()
+								ex.show()
 							elif chosenMenu2Button == menu2Option[3]:
 								filesListed= choicebox(msgFileRecovered, title, fileListRecovered)
 							elif chosenMenu2Button == menu2Option[2]:
@@ -595,12 +627,16 @@ def bulalords():
 			for x in range(len(headerSign)):
 				locations.append(manager.list())
 			start = time.time()
+			z = 0
+			threads = 10
 			for x in range(len(headerSign)):
-				if extensionSign[x] == 'docx':
-					process.append(multiprocessing.Process(target=findSignatures,args=(path,rootPath,startSector,endSector,headerSign[x],footerSign[x],locations[x],20)))
-				else:
-					process.append(multiprocessing.Process(target=findSignatures,args=(path,rootPath,startSector,endSector,headerSign[x],footerSign[x],locations[x],0)))
-	
+				for y in range(threads):
+					if extensionSign[x] == 'docx' or extensionSign[x] == 'xlsx':
+						process.append(threading.Thread(target=findSignatures,args=(path,rootPath,startSector/threads*z,endSector/threads*(z+1),headerSign[x],footerSign[x],locations[x],20)))
+					else:
+						process.append(threading.Thread(target=findSignatures,args=(path,rootPath,startSector/threads*z,endSector/threads*(z+1),headerSign[x],footerSign[x],locations[x],0)))
+					z += 1
+
 			for x in range(len(process)):
 				process[x].start()
 			for x in range(len(process)):
