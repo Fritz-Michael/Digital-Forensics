@@ -382,6 +382,7 @@ def recoverdocxxlsx(path, filepositions, folder):
 	drive = open(path, 'rb')
 	isdocx = False
 	isxlsx = False
+	ispptx = False
 	prev = ''
 	for fileposition in filepositions:
 		start = fileposition[0]
@@ -410,6 +411,15 @@ def recoverdocxxlsx(path, filepositions, folder):
 				else:
 					drive.seek(curPos+1)
 
+			if binascii.hexlify(cur) == b'70' and not ispptx:
+				drive.seek(curPos)
+				header = binascii.hexlify(drive.read(4))
+				if header == b'7070742f':
+					isxlsx = True
+					drive.seek(curPos+1)
+				else:
+					drive.seek(curPos+1)
+
 			image.write(cur)
 			start += 1
 			prev = cur
@@ -420,54 +430,9 @@ def recoverdocxxlsx(path, filepositions, folder):
 		if isxlsx:
 			os.rename(folder + '\\found\\' + str(fileposition[0]), folder + '\\found\\' + str(fileposition[0]) + '.xlsx')
 			print("Saved ", ".xlsx", " file!")
-
-def main():
-	threads = 0
-	manager = Manager()
-	process = []
-	locations = manager.list()
-	start = time.time()
-	### get the file types ###
-	getHeaders()
-	getFooters()
-	getExtensions()
-	##########################
-	
-	### searching for signatures ###
-	for x in range(len(headerSign)):
-		locations.append(manager.list())
-
-	for x in range(len(headerSign)):
-		if extensionSign[x] == '.docx':
-			process.append(threading.Thread(target=findSignatures,args=('\\\\.\\E:','E',0,3000000,headerSign[x],footerSign[x],locations[x],20)))
-		else:
-			process.append(threading.Thread(target=findSignatures,args=('\\\\.\\E:','E',0,3000000,headerSign[x],footerSign[x],locations[x],0)))
-
-	for x in range(len(headerSign)):
-		process[x].start()
-
-	for x in range(len(headerSign)):
-		process[x].join()
-	###############################
-
-	process = []
-	startRecover = time.time()
-	### recovering files ###
-	for x in range(len(headerSign)):
-		if extension[x] == '.docx':
-			process.append(threading.Thread(target=recoverdocxxlsx,args=('\\\\.\\E:',locations[x])))
-		else:
-			process.append(threading.Thread(target=recoverfile,args=('\\\\.\\E:',locations[x],extensionSign[x].rstrip())))
-
-	for x in range(len(headerSign)):
-		process[x].start()
-
-	for x in range(len(headerSign)):
-		process[x].join()
-	########################
-	print("total recover time: ", time.time()-startRecover)
-
-	print("total time: ", time.time()-start)
+		if ispptx:
+			os.rename(folder + '\\found\\' + str(fileposition[0]), folder + '\\found\\' + str(fileposition[0]) + '.pptx')
+			print("Saved ", ".pptx", " file!")
 
 def bulalords():
 	hack = "hacker.jpg"
@@ -535,7 +500,7 @@ def bulalords():
 						start = time.time()
 						### recovering files ###
 						for x in range(len(index)):
-							if extensionSign[index[x]] == '.docx':
+							if extensionSign[index[x]] == '.docx' or extensionSign[index[x]] == '.xlsx' or extensionSign[index[x]] == '.pptx':
 								process.append(multiprocessing.Process(target=recoverdocxxlsx,args=(path,locations[index[x]],dirSave)))
 							else:
 								process.append(multiprocessing.Process(target=recoverfile,args=(path,locations[index[x]],extensionSign[index[x]].rstrip(),dirSave)))
@@ -613,7 +578,7 @@ def bulalords():
 				locations.append(manager.list())
 			start = time.time()
 			for x in range(len(headerSign)):
-				if extensionSign[x] == '.docx':
+				if extensionSign[x] == '.docx' or extensionSign[x] == '.xlsx' or extensionSign[x] == '.pptx':
 					process.append(multiprocessing.Process(target=findSignatures,args=(path,rootPath,0,gettotalsectors(path),headerSign[x],footerSign[x],locations[x],20)))
 				else:
 					process.append(multiprocessing.Process(target=findSignatures,args=(path,rootPath,0,gettotalsectors(path),headerSign[x],footerSign[x],locations[x],0)))

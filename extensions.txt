@@ -2,7 +2,11 @@
 .jpg
 .pdf
 .docx
+.xlsx
+.pptx
 .doc
 .xls
 .gif
 .rtf
+.html
+.art
