@@ -2,6 +2,7 @@ from PIL import ImageTk, Image
 from functools import partial
 import tkinter as tk
 from tkinter import messagebox
+from tkinter import filedialog
 from filerecoveryfunctions import *
 
 class FileRecovery(tk.Frame):
@@ -11,70 +12,85 @@ class FileRecovery(tk.Frame):
 		
 		self.controller = controller
 		self.parent = parent
+		self.settings_frame = tk.Frame(self.parent,bg=None,highlightthickness=2,highlightbackground='red')
+		self.initialize_settings_frame()
+		self.alignment_frames.append(tk.Frame(self.parent))
 
+		self.start_scan_button = tk.Button(self.alignment_frames[1],text='Start Scan',command=self.start_scan)
+		self.advanced_button = tk.Button(self.alignment_frames[1],text='Advanced',command=self.advanced_settings)
+		self.recover_files_button = tk.Button(self.alignment_frames[1],text='Recover Files',command=self.recover_files)
+
+		self.settings_frame.pack(fill=tk.X)
+		self.alignment_frames[1].pack(side=tk.TOP)
+		self.advanced_button.pack(side=tk.LEFT,padx=5,pady=10)
+		self.start_scan_button.pack(side=tk.LEFT,padx=5,pady=10)
+		self.recover_files_button.pack(side=tk.LEFT,padx=5,pady=10)
+
+	def initialize_settings_frame(self):
+		self.directory = '/'
 		self.start_sector_value = tk.IntVar()
 		self.end_sector_value = tk.IntVar()
 		self.thread_number_value = tk.IntVar()
+
 		self.start_sector_value.set(1)
 		self.end_sector_value.set(300000)
 		self.thread_number_value.set(10)
 
-		self.choose_drive_label = tk.Label(self.parent,text='Choose a Drive')
-		self.choose_drive_list = tk.Listbox(self.parent,selectmode=tk.SINGLE,height=3,exportselection=False)
-		self.choose_drive_scroll = tk.Scrollbar(self.parent,width=12)
-		self.choose_drive_list.config(yscrollcommand=self.choose_drive_scroll.set)
-		self.choose_drive_scroll.config(command=self.choose_drive_list.yview)
-		self.choose_filetype_label = tk.Label(self.parent,text='Choose File Types')
-		self.choose_filetype_list = tk.Listbox(self.parent,selectmode=tk.MULTIPLE,height=3,exportselection=False)
-		self.choose_filetype_scroll = tk.Scrollbar(self.parent,width=12)
-		self.choose_filetype_list.config(yscrollcommand=self.choose_filetype_scroll.set)
-		self.choose_filetype_scroll.config(command=self.choose_filetype_list.yview)
-		self.start_scan_button = tk.Button(self.parent,text='Start Scan',command=self.start_scan)
-		self.advanced_button = tk.Button(self.parent,text='Advanced',command=self.advanced_settings)
-		self.message_box = tk.Text(self.parent,state=tk.DISABLED,height=15,width=35)
-		self.recover_files_button = tk.Button(self.parent,text='Recover Files',command=self.recover_files)
+		self.alignment_frames = []
+		self.alignment_frames.append(tk.Frame(self.settings_frame))
+		self.choose_drive_label = tk.Label(self.settings_frame,text='Choose a Drive')
+		self.choose_filetype_menu = tk.Menubutton(self.alignment_frames[0],text='Choose File Types',relief=tk.RAISED)
+		self.choose_directory_button = tk.Button(self.alignment_frames[0],text='Select Directory',command=self.choose_directory)
 
 		self.set_drives()
 		self.set_filetypes()
 
-		self.choose_drive_label.grid(row=0,column=0)
-		self.choose_drive_list.grid(row=1,column=0,rowspan=2)
-		self.choose_drive_scroll.grid(row=1,column=1,rowspan=2,sticky=tk.W)
+		self.alignment_frames[0].pack(side=tk.TOP,pady=8)
+		self.choose_drive_list.pack(side=tk.LEFT,pady=8)
+		self.choose_filetype_menu.pack(side=tk.LEFT,pady=8)
+		self.choose_directory_button.pack(side=tk.LEFT)
 
-		self.choose_filetype_label.grid(row=0,column=2)
-		self.choose_filetype_list.grid(row=1,column=2,rowspan=2)
-		self.choose_filetype_scroll.grid(row=1,column=3,rowspan=2,sticky=tk.W)
-		self.advanced_button.grid(row=3,column=2)
-		self.message_box.grid(row=5,column=0,rowspan=2,columnspan=3,sticky=tk.W)
-		self.start_scan_button.grid(row=7,column=0)
-		self.recover_files_button.grid(row=7,column=2)
+	def choose_directory(self):
+		self.directory = filedialog.askdirectory(initialdir=self.directory,title='Select Directory')
 
 	def set_drives(self):
 		self.drives = get_drivesWin()
-		for key,drive in enumerate(self.drives):
-			self.choose_drive_list.insert(key,drive)
+		self.default_drive = tk.StringVar(self.parent)
+		self.default_drive.set(self.drives[0])
+		self.choose_drive_list = tk.OptionMenu(self.alignment_frames[0],self.default_drive,*self.drives)
 
 	def set_filetypes(self):
+		self.choose_filetype_menu.menu = tk.Menu(self.choose_filetype_menu,tearoff=0)
+		self.choose_filetype_menu['menu'] = self.choose_filetype_menu.menu
 		self.filetypes = getExtensions()
+		self.filetypes_index = []
 		for key,filetype in enumerate(self.filetypes):
-			self.choose_filetype_list.insert(key,filetype)
+			self.filetypes_index.append(tk.IntVar())
+			self.filetypes_index[key].set(key)
+			self.choose_filetype_menu.menu.add_checkbutton(label=self.filetypes[key],variable=self.filetypes_index[key])
+
 
 	def advanced_settings(self):
-		self.advanced_button.grid_remove()
+		self.advanced_button.pack_forget()
+		self.alignment_frames.append(tk.Frame(self.settings_frame))
+		self.alignment_frames.append(tk.Frame(self.settings_frame))
+		self.alignment_frames.append(tk.Frame(self.settings_frame))
+		self.start_sector_label = tk.Label(self.alignment_frames[2],text='Start Sector: ')
+		self.end_sector_label = tk.Label(self.alignment_frames[3],text='End Sector: ')
+		self.thread_number_label = tk.Label(self.alignment_frames[4],text='Thread Number: ')
+		self.start_sector_entry = tk.Entry(self.alignment_frames[2],textvariable=self.start_sector_value)
+		self.end_sector_entry = tk.Entry(self.alignment_frames[3],textvariable=self.end_sector_value)
+		self.thread_number_entry = tk.Entry(self.alignment_frames[4],textvariable=self.thread_number_value)
 
-		self.start_sector_label = tk.Label(self.parent,text='Start Sector: ')
-		self.end_sector_label = tk.Label(self.parent,text='End Sector: ')
-		self.thread_number_label = tk.Label(self.parent,text='Thread Number: ')
-		self.start_sector_entry = tk.Entry(self.parent,textvariable=self.start_sector_value)
-		self.end_sector_entry = tk.Entry(self.parent,textvariable=self.end_sector_value)
-		self.thread_number_entry = tk.Entry(self.parent,textvariable=self.thread_number_value)
-
-		self.start_sector_label.grid(row=3,column=0,sticky=tk.W)
-		self.end_sector_label.grid(row=4,column=0,sticky=tk.W)
-		self.start_sector_entry.grid(row=3,column=1,columnspan=2,sticky=tk.W)
-		self.end_sector_entry.grid(row=4,column=1,columnspan=2,sticky=tk.W)
-		self.thread_number_label.grid(row=3,column=3,sticky=tk.W)
-		self.thread_number_entry.grid(row=3,column=4,columnspan=2,sticky=tk.W)
+		self.alignment_frames[2].pack(pady=3)
+		self.alignment_frames[3].pack(pady=3)
+		self.alignment_frames[4].pack(pady=3)
+		self.start_sector_label.pack(side=tk.LEFT)
+		self.start_sector_entry.pack(side=tk.LEFT)
+		self.end_sector_label.pack(side=tk.LEFT)
+		self.end_sector_entry.pack(side=tk.LEFT)
+		self.thread_number_label.pack(side=tk.LEFT)
+		self.thread_number_entry.pack(side=tk.LEFT)
 
 	def start_scan(self):
 		if self.choose_drive_list.curselection() == ():

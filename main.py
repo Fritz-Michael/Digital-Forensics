@@ -20,7 +20,7 @@ class main(tk.Tk):
 		self.about_us_button = tk.Button(self,text='About Us',command=self.about_us,borderwidth=0)
 		self.exit_button = tk.Button(self,text='Exit',command=self.exit,borderwidth=0)
 
-		self.frame_width = 550
+		self.frame_width = 500
 		self.frame_height = 500
 		self.function_frame = tk.Frame(self,width=self.frame_width,height=self.frame_height,bg=None,highlightthickness=2,highlightbackground='black')
 		self.function_frame.grid_propagate(False)
@@ -52,6 +52,7 @@ class main(tk.Tk):
 		self.function_frame.destroy()
 		self.function_frame = tk.Frame(self,width=self.frame_width,height=self.frame_height,bg=None,highlightthickness=2,highlightbackground='black')
 		self.function_frame.grid_propagate(False)
+		self.function_frame.pack_propagate(False)
 		self.function_frame.grid(row=1,column=2,rowspan=5,columnspan=5)
 		FileRecovery(parent=self.function_frame,controller=self)
 
@@ -60,6 +61,7 @@ class main(tk.Tk):
 		self.function_frame.destroy()
 		self.function_frame = tk.Frame(self,width=self.frame_width,height=self.frame_height,bg=None,highlightthickness=2,highlightbackground='black')
 		self.function_frame.grid_propagate(False)
+		self.function_frame.pack_propagate(False)
 		self.function_frame.grid(row=1,column=2,rowspan=5,columnspan=5)
 		CleanDrive(parent=self.function_frame,controller=self)
 
@@ -68,6 +70,7 @@ class main(tk.Tk):
 		self.function_frame.destroy()
 		self.function_frame = tk.Frame(self,width=self.frame_width,height=self.frame_height,bg=None,highlightthickness=2,highlightbackground='black')
 		self.function_frame.grid_propagate(False)
+		self.function_frame.pack_propagate(False)
 		self.function_frame.grid(row=1,column=2,rowspan=5,columnspan=5)
 		Encryption(parent=self.function_frame,controller=self)
 
@@ -75,6 +78,7 @@ class main(tk.Tk):
 		self.function_frame.destroy()
 		self.function_frame = tk.Frame(self,width=self.frame_width,height=self.frame_height,bg=None,highlightthickness=2,highlightbackground='black')
 		self.function_frame.grid_propagate(False)
+		self.function_frame.pack_propagate(False)
 		self.function_frame.grid(row=1,column=2,rowspan=5,columnspan=5)
 		AboutUs(parent=self.function_frame,controller=self)
 

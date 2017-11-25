@@ -39,7 +39,7 @@ def get_drivesWin():
 ### TOTAL NUMBER OF SECTORS NG DRIVE 
 ### PARAMETERS 
 	#path-'\\\\.\\E:' 
-def gettotalsectors(path):
+def get_total_sectors_NTFS(path):
 	try: 
 		drive = open(path,'rb')
 		drive.read(40)
@@ -49,10 +49,17 @@ def gettotalsectors(path):
 	except PermissionError:
 		messagebox.showwarning('Error','Permission denied on drive')
 
+def get_total_sectors_FAT32(path):
+	drive = open(path,'rb')
+	drive.read(32)
+	sectors = int.from_bytes(drive.read(4), byteorder='little')
+	drive.close()
+	return sectors
+
 ### GET BYTES PER SECTOR 
 ### PARAMETERS 
 	#path - 'E'
-def getbytespersector(path): 
+def get_bytes_per_sector_NTFS(path): 
 	sectorsPerCluster = ctypes.c_ulonglong(0)
 	bytesPerSector = ctypes.c_ulonglong(0)
 	rootPathName = ctypes.c_wchar_p(u"" + path + ":\\")
@@ -64,6 +71,13 @@ def getbytespersector(path):
 		None,
 	)
 	return bytesPerSector.value
+
+def get_bytes_per_sector_FAT32(path):
+	drive = open(path,'rb')
+	drive.read(11)
+	byte = int.from_bytes(drive.read(2), byteorder='little')
+	drive.close()
+	return byte	
 
 ### SECTORS PER CLUSTER 
 ### PARAMETERS 
