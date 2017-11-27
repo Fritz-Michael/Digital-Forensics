@@ -40,12 +40,12 @@ def myFmtCallback(command, modifier, arg):
     return 1    # TRUE
 
 def format_drive(Drive, Format, Title):
-    fm = windll.LoadLibrary('fmifs.dll')
-    FMT_CB_FUNC = WINFUNCTYPE(c_int, c_int, c_int, c_void_p)
-    FMIFS_HARDDISK = 0x0C
-    FMIFS_UNKNOWN = 0
-    fm.FormatEx(c_wchar_p(Drive), FMIFS_UNKNOWN, c_wchar_p(Format),
-                c_wchar_p(Title), True, c_int(0), FMT_CB_FUNC(myFmtCallback))
+    api = windll.LoadLibrary('fmifs.dll')
+    callback_function = WINFUNCTYPE(c_int, c_int, c_int, c_void_p)
+    harddisk = 0x0C
+    drive_type = 0
+    api.FormatEx(c_wchar_p(Drive), drive_type, c_wchar_p(Format),
+                c_wchar_p(Title), True, c_int(0), callback_function(myFmtCallback))
 
 
 if __name__ == '__main__':
