@@ -11,6 +11,8 @@ class CreateToolTip(object):
         self.text = text
         self.widget.bind("<Enter>", self.enter)
         self.widget.bind("<Leave>", self.close)
+
+
     def enter(self, event=None):
         x = y = 0
         x, y, cx, cy = self.widget.bbox("insert")
@@ -23,6 +25,8 @@ class CreateToolTip(object):
                        background=None, relief='solid', borderwidth=0.5,
                        font=("times", "8", "normal"))
         label.pack(ipadx=1)
+
+        
     def close(self, event=None):
         if self.tw:
             self.tw.destroy()
@@ -36,16 +40,16 @@ class CleanDrive(tk.Frame):
 		self.parent = parent
 
 		self.file_deletion_frame = tk.Frame(self.parent,highlightthickness=2,highlightbackground='black')
-		self.clean_sector_frame = tk.Frame(self.parent)
-		self.format_drive_frame = tk.Frame(self.parent)
+		self.clean_sector_frame = tk.Frame(self.parent,highlightthickness=2,highlightbackground='black')
+		self.format_drive_frame = tk.Frame(self.parent,highlightthickness=2,highlightbackground='black')
 
 		self.file_deletion_init()
 		self.clean_sector_init()
 		self.format_drive_init()
 		
 		self.file_deletion_frame.pack()
-		self.clean_sector_frame.pack()
-		self.format_drive_frame.pack()		
+		self.clean_sector_frame.pack(fill=tk.X)
+		self.format_drive_frame.pack(fill=tk.BOTH)		
 
 
 	def file_deletion_init(self):
@@ -82,11 +86,26 @@ class CleanDrive(tk.Frame):
 
 
 	def clean_sector_init(self):
-		self.clean_sector_label = tk.Label(self.clean_sector_frame,text='')
+		self.alignment_frames.append(tk.Frame(self.clean_sector_frame))
+		self.clean_sector_label = tk.Label(self.clean_sector_frame,text='Delete Sector')
+		self.sector_number_label = tk.Label(self.alignment_frames[3],text='Sector Number: ')
+		self.sector_number_entry = tk.Entry(self.alignment_frames[3])
+		self.delete_sector_button = tk.Button(self.clean_sector_frame,text='Delete Sector',command=self.delete_sector)
+
+		self.clean_sector_label.pack(pady=10)
+		self.alignment_frames[3].pack(side=tk.TOP)
+		self.sector_number_label.pack(side=tk.LEFT)
+		self.sector_number_entry.pack(side=tk.LEFT)
+		self.delete_sector_button.pack(pady=10)
 
 
 	def format_drive_init(self):
-		pass
+		self.format_drive_label = tk.Label(self.format_drive_frame,text='Format Drive')
+		self.format_drive_button = tk.Button(self.format_drive_frame,text='Format',command=self.format_drive)
+		self.format_drive_label.pack(pady=10)
+
+		self.set_file_formats()
+		self.format_drive_button.pack(pady=5)
 
 
 	def set_drives_menu(self):
@@ -109,6 +128,20 @@ class CleanDrive(tk.Frame):
 
 		self.choose_algorithm_label.pack(side=tk.LEFT,padx=3)
 		self.choose_algorithm_menu.pack(side=tk.LEFT,padx=3)
+
+
+	def set_file_formats(self):
+		self.alignment_frames.append(tk.Frame(self.format_drive_frame))
+
+		self.file_format = ['NTFS','FAT32','exFAT']
+		self.default_file_format = tk.StringVar()
+		self.default_file_format.set(self.file_format[0])
+		self.choose_format_label = tk.Label(self.alignment_frames[4],text='Choose Filesystem: ')
+		self.choose_format_menu = tk.OptionMenu(self.alignment_frames[4],self.default_file_format,*self.file_format)
+
+		self.alignment_frames[4].pack(pady=5)
+		self.choose_format_label.pack(side=tk.LEFT)
+		self.choose_format_menu.pack(side=tk.LEFT)
 
 
 	def get_drives(self):
@@ -141,4 +174,8 @@ class CleanDrive(tk.Frame):
 		if self.select_value.get() == 1:
 			self.files_list.select_set(0,tk.END)
 		else:
-			self.files_list.selection_clear(0,tk.END)						
+			self.files_list.selection_clear(0,tk.END)			
+
+
+	def delete_sector(self):
+		pass			
