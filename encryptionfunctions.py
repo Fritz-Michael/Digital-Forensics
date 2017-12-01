@@ -38,8 +38,8 @@ def decrypt_message(message, key):
 
 
 if __name__ == '__main__':
-	temp = encrypt_message('hello world')
-	print(temp)
+	# temp = encrypt_message('hello world')
+	# print(temp)
 	# print(decrypt_message(temp[0],temp[1]))
 	#print(''.join(encrypt_message('hello world')[0]))
 	# b = 29
@@ -49,3 +49,4 @@ if __name__ == '__main__':
 	# b = ((x - a)*-1)%29
 	# print(b)
 	#print(bin(10))
+	print(int(bin(10),2))
