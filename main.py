@@ -17,6 +17,7 @@ class main(tk.Tk):
 		self.file_recovery_button = tk.Button(self,text='File Recovery',command=self.file_recovery,borderwidth=0)
 		self.clean_drive_button = tk.Button(self,text='Clean Drive',command=self.clean_drive,borderwidth=0)
 		self.encryption_button = tk.Button(self,text='Encryption',command=self.encryption,borderwidth=0)
+		self.steganography_button = tk.Button(self,text='Steganography',command=self.steganography,borderwidth=0)
 		self.about_us_button = tk.Button(self,text='About Us',command=self.about_us,borderwidth=0)
 		self.exit_button = tk.Button(self,text='Exit',command=self.exit,borderwidth=0)
 
@@ -28,11 +29,13 @@ class main(tk.Tk):
 		self.file_recovery_button.bind('<Enter>',partial(self.color_config,self.file_recovery_button,'green'))
 		self.clean_drive_button.bind('<Enter>',partial(self.color_config,self.clean_drive_button,'green'))
 		self.encryption_button.bind('<Enter>',partial(self.color_config,self.encryption_button,'green'))
+		self.steganography_button.bind('<Enter>',partial(self.color_config,self.steganography_button,'green'))
 		self.about_us_button.bind('<Enter>',partial(self.color_config,self.about_us_button,'green'))
 		self.exit_button.bind('<Enter>',partial(self.color_config,self.exit_button,'green'))
 		self.file_recovery_button.bind('<Leave>',partial(self.color_config,self.file_recovery_button,'black'))
 		self.clean_drive_button.bind('<Leave>',partial(self.color_config,self.clean_drive_button,'black'))
 		self.encryption_button.bind('<Leave>',partial(self.color_config,self.encryption_button,'black'))
+		self.steganography_button.bind('<Leave>',partial(self.color_config,self.steganography_button,'black'))
 		self.about_us_button.bind('<Leave>',partial(self.color_config,self.about_us_button,'black'))
 		self.exit_button.bind('<Leave>',partial(self.color_config,self.exit_button,'black'))
 
@@ -40,8 +43,9 @@ class main(tk.Tk):
 		self.file_recovery_button.grid(row=1,columnspan=2,sticky=tk.W+tk.E)
 		self.clean_drive_button.grid(row=2,columnspan=2,sticky=tk.W+tk.E)
 		self.encryption_button.grid(row=3,columnspan=2,sticky=tk.W+tk.E)
-		self.about_us_button.grid(row=4,columnspan=2,sticky=tk.W+tk.E)
-		self.exit_button.grid(row=5,columnspan=2,sticky=tk.W+tk.E)
+		self.steganography_button.grid(row=4,columnspan=2,sticky=tk.W+tk.E)
+		self.about_us_button.grid(row=5,columnspan=2,sticky=tk.W+tk.E)
+		self.exit_button.grid(row=6,columnspan=2,sticky=tk.W+tk.E)
 		self.function_frame.grid(row=1,column=2,rowspan=5,columnspan=5)
 
 	def color_config(self, widget, color, event):
@@ -73,6 +77,11 @@ class main(tk.Tk):
 		self.function_frame.pack_propagate(False)
 		self.function_frame.grid(row=1,column=2,rowspan=5,columnspan=5)
 		Encryption(parent=self.function_frame,controller=self)
+
+
+	def steganography(self):
+		pass
+
 
 	def about_us(self):
 		self.function_frame.destroy()

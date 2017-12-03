@@ -2,40 +2,56 @@ import bitstring as bt
 import random as rand
 from functools import reduce
 
-def reverse_message(message):
-	ascii_equivalent = [ord(x) for x in message]
-	ascii_reversed = ascii_equivalent[::-1]
-	return ascii_reversed
 
-def generate_key(reversed):
-	return rand.randint(len(reversed),max(reversed))
+def caesar_cipher(message):
+	key = rand.randint(1,26)
+	translated = ''
+	for symbol in message:
+		if symbol.isalpha():
+			num = ord(symbol)
+			num += key
 
-def increment_message(reversed,key):
-	return list(map(lambda x: ((x+key)%57)+66,reversed))
+			if symbol.isupper():
+				if num > ord('Z'):
+					num -= 26
+				elif num < ord('A'):
+					num += 26
+			elif symbol.islower():
+				if num > ord('z'):
+					num -= 26
+				elif num < ord('a'):
+					num += 26
 
-def reverse_to_char(message):
-	temp = message[::-1]
-	return list(map(lambda x: chr(x), temp))
+			translated += chr(num)
+		else:
+			translated += symbol
+	return (translated,key)
 
-def to_ascii(message):
-	return [ord(x) for x in message]
+def decrypt_caesar_cipher(message,key):
+	translated = ''
+	for symbol in message:
+		if symbol.isalpha():
+			num = ord(symbol)
+			num -= key
 
-def decrement_message(message, key):
-	temp = list(map(lambda x: x-65,message))
-	return list(map(lambda x: (x-key)%57,temp))
+			if symbol.isupper():
+				if num > ord('Z'):
+					num -= 26
+				elif num < ord('A'):
+					num += 26
+			elif symbol.islower():
+				if num > ord('z'):
+					num -= 26
+				elif num < ord('a'):
+					num += 26
 
-def encrypt_message(message):
-	reverse = reverse_message(message)
-	key = generate_key(reverse)
-	inc_list = increment_message(reverse,key)
-	return (list(map(lambda x: chr(x), inc_list)),key)
-
-def decrypt_message(message, key):
-	message = to_ascii(message)
-	dec_list = decrement_message(message,key)
-	return reverse_to_char(dec_list)
-
+			translated += chr(num)
+		else:
+			translated += symbol
+	return translated
 
 
 if __name__ == '__main__':
-	pass
+	temp = caesar_cipher('Lorem Ipsum')
+	print(temp)
+	print(decrypt_caesar_cipher(temp[0],temp[1]))
