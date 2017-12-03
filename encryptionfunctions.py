@@ -70,8 +70,8 @@ def emoji_encrypt(message):
 			else:
 				isCaps = False
 				sub = 97
-				temp = (value - sub + cipher) % len(dictionary)
-				ciphertext = ciphertext + dictionary[temp]
+			temp = (value - sub + cipher) % len(dictionary)
+			ciphertext = ciphertext + dictionary[temp]
 		else:
 			ciphertext = ciphertext + ' '
 

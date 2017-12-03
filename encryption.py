@@ -1,6 +1,7 @@
 from PIL import ImageTk, Image
 from functools import partial
 import tkinter as tk
+from encryptionfunctions import *
 
 class Encryption(tk.Frame):
 
@@ -63,7 +64,9 @@ class Encryption(tk.Frame):
 
 
 	def encrypt(self):
-		pass
+		if self.default_algorithm.get() == 'Caesar Cipher':
+			tk.tkMessageBox.showinfo('Result',caesar_cipher(self.enter_message_text.get('1.0','end-1c'))[0])
+
 
 
 	def decrypt(self):
