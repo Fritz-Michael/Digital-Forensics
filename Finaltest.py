@@ -155,7 +155,8 @@ def getmetadata(path, rootpath):
 		currboff = getbytespersector(rootpath) * currsec
 		drive.seek(currboff)
 		fbyte = drive.read(4).decode('utf-8')
-
+		print(fbyte)
+		a = input('pause')
 		if fbyte == 'FILE':
 			print('Current Sector: ',currsec)
 			fname = getfilename(path, rootpath, currsec)
