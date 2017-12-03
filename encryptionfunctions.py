@@ -27,6 +27,7 @@ def caesar_cipher(message):
 			translated += symbol
 	return (translated,key)
 
+
 def decrypt_caesar_cipher(message,key):
 	translated = ''
 	for symbol in message:
@@ -51,7 +52,32 @@ def decrypt_caesar_cipher(message,key):
 	return translated
 
 
+def emoji_encrypt(message):
+	dictionary = [':)', ':D', ':(', 'XD', '>_<', '-_-', ';(', 'o_O', 'xC', ';D',
+	'xP', 'xb', 'B-)', 'B-(', 'X)', 'X(', ':3', ':*', ';)', '>:(',
+	'>:)', ":'(", 'XO', 'D:', '(:', ':/']
+
+	ciphertext = ''
+	cipher = 3
+	isCaps = False
+	sub = 0
+	for char in message:
+		value = ord(char)
+		if value != 32:
+			if value < 95:
+				isCaps = True
+				sub = 65
+			else:
+				isCaps = False
+				sub = 97
+				temp = (value - sub + cipher) % len(dictionary)
+				ciphertext = ciphertext + dictionary[temp]
+		else:
+			ciphertext = ciphertext + ' '
+
+	return ciphertext
+
+
 if __name__ == '__main__':
-	temp = caesar_cipher('Lorem Ipsum')
+	temp = emoji_encrypt('Lorem Ipsum')
 	print(temp)
-	print(decrypt_caesar_cipher(temp[0],temp[1]))
