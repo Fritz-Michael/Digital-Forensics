@@ -2,6 +2,7 @@ from PIL import ImageTk, Image
 from functools import partial
 import tkinter as tk
 from filerecoveryfunctions import *
+from formatdrivefunctions import *
 
 
 class CreateToolTip(object):
@@ -158,7 +159,13 @@ class CleanDrive(tk.Frame):
 
 
 	def format_drive(self):
-		pass
+		path = self.default_drive + ':\\'
+		if default_file_format.get() == 'NTFS':
+			format_drive_to_NTFS(path)
+		elif default_file_format.get() == 'FAT32':
+			format_drive_to_FAT32(path)
+		elif default_file_format.get() == 'exFAT':
+			format_drive_to_exFAT(path)
 
 
 	def advanced_settings(self):

@@ -3,44 +3,23 @@ import os
 from filerecoveryfunctions import *
 from ctypes import *
 
-def get_boot_sector_NTFS(path):
-	drive = open(path,'rb')
-	boot_sector = drive.read(512)
-	drive.close()
-	return boot_sector
-
-def zero_drive(path,bytesPerSector,totalSectors):
-	x = 0
-	try:
-		with open(path,'r+') as of:
-			for x in range(totalSectors):
-				of.write('\0' * bytesPerSector)
-				of.flush()
-				x += 1
-				print(x)
-	except OSError:
-		pass
-
-def write_boot_sector_NTFS(path):
-	drive = open(path,'rb+')
-	file = open('NTFS.txt','rb')
-	boot_sector = file.read()
-	drive.write(boot_sector)
-	file.close()
-	drive.close()
 
 def format_drive_to_NTFS(path):
-	format_drive(path,'NTFS','USBDrive')
+	format_drive(path,'NTFS','Drive')
+
 
 def format_drive_to_FAT32(path):
-	format_drive(path,'FAT32','USBDrive')
+	format_drive(path,'FAT32','Drive')
+
 
 def format_drive_to_exFAT(path):
-	format_drive(path,'exFAT','USBDrive')
+	format_drive(path,'exFAT','Drive')
+
 
 def myFmtCallback(command, modifier, arg):
     print(command)
     return 1    # TRUE
+
 
 def format_drive(Drive, Format, Title):
     api = windll.LoadLibrary('fmifs.dll')
