@@ -35,6 +35,9 @@ def format_drive_to_NTFS(path):
 def format_drive_to_FAT32(path):
 	format_drive(path,'FAT32','USBDrive')
 
+def format_drive_to_exFAT(path):
+	format_drive(path,'exFAT','USBDrive')
+
 def myFmtCallback(command, modifier, arg):
     print(command)
     return 1    # TRUE
@@ -49,5 +52,5 @@ def format_drive(Drive, Format, Title):
 
 
 if __name__ == '__main__':
-	format_drive_NTFS_to_FAT32('E:\\')
+	format_drive_to_FAT32('E:\\')
 	
