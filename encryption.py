@@ -37,7 +37,7 @@ class Encryption(tk.Frame):
 
 
 	def set_algorithms(self):
-		self.algorithms = ['Caesar Cipher','Emoji','3DES','Sample','Sample']
+		self.algorithms = ['Caesar Cipher','Emoji','XOR','Sample','Sample']
 		self.default_algorithm = tk.StringVar(self.parent)
 		self.default_algorithm.set(self.algorithms[0])
 		self.choose_algorithm_menu = tk.OptionMenu(self.parent,self.default_algorithm,*self.algorithms)
@@ -77,6 +77,12 @@ class Encryption(tk.Frame):
 			result.set_results(crypto[0],crypto[1])
 			self.enter_message_text.delete('1.0',tk.END)
 			result.mainloop()
+		if self.default_algorithm.get() == 'XOR':
+			result = ResultWindow()
+			crypto = encrypt_XOR(self.enter_message_text.get('1.0','end-1c'))
+			result.set_results(crypto[0],crypto[1])
+			self.enter_message_text.delete('1.0',tk.END)
+			result.mainloop()
 
 
 	def decrypt(self):
@@ -89,3 +95,9 @@ class Encryption(tk.Frame):
 			result.mainloop()		
 		if self.default_algorithm.get() == 'Emoji':
 			pass
+		if self.default_algorithm.get() == 'XOR':
+			result = ResultWindow()
+			result.set_results(decrypt_XOR(self.enter_crypto_text.get('1.0','end-1c'),self.enter_key_entry.get()),self.enter_key_entry.get())
+			self.enter_crypto_text.delete('1.0',tk.END)
+			self.enter_key_entry.delete(0,'end')
+			result.mainloop()

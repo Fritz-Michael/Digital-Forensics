@@ -115,7 +115,21 @@ def emoji_decrypt(message,key):
 	print(num2)
 
 
+def encrypt_XOR(message):
+	key = bin(rand.randint(1,26))[2::]
+	temp = [bin(ord(x))[2::] for x in message]
+	encrypted = list(map(lambda x: int(x,2) ^ int(key,2),temp))
+	encrypted = [bin(x)[2::].zfill(8) for x in encrypted]
+	return (''.join(encrypted),key)
+
+
+def decrypt_XOR(crypto,key):
+	temp = [crypto[x:x+8] for x in range(0,len(crypto),8)]
+	xor = list(map(lambda x: int(x,2) ^ int(key,2),temp))
+	message = [chr(x) for x in xor]
+	return ''.join(message)
+
 
 if __name__ == '__main__':
-	temp = emoji_encrypt('hello world')
-	emoji_decrypt(temp[0],temp[1])
+	temp = encrypt_XOR('hello')
+	print(decrypt_XOR(temp[0],temp[1]))
