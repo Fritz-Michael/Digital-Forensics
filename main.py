@@ -40,12 +40,12 @@ class main(tk.Tk):
 		self.exit_button.bind('<Leave>',partial(self.color_config,self.exit_button,'black'))
 
 		self.label.grid(row=0,column=3,columnspan=2)
-		self.file_recovery_button.grid(row=1,columnspan=2,sticky=tk.W+tk.E)
-		self.clean_drive_button.grid(row=2,columnspan=2,sticky=tk.W+tk.E)
-		self.encryption_button.grid(row=3,columnspan=2,sticky=tk.W+tk.E)
-		self.steganography_button.grid(row=4,columnspan=2,sticky=tk.W+tk.E)
-		self.about_us_button.grid(row=5,columnspan=2,sticky=tk.W+tk.E)
-		self.exit_button.grid(row=6,columnspan=2,sticky=tk.W+tk.E)
+		self.file_recovery_button.grid(row=0,columnspan=2,sticky=tk.W+tk.E)
+		self.clean_drive_button.grid(row=1,columnspan=2,sticky=tk.W+tk.E)
+		self.encryption_button.grid(row=2,columnspan=2,sticky=tk.W+tk.E)
+		self.steganography_button.grid(row=3,columnspan=2,sticky=tk.W+tk.E)
+		self.about_us_button.grid(row=4,columnspan=2,sticky=tk.W+tk.E)
+		self.exit_button.grid(row=5,columnspan=2,sticky=tk.W+tk.E)
 		self.function_frame.grid(row=1,column=2,rowspan=5,columnspan=5)
 
 	def color_config(self, widget, color, event):

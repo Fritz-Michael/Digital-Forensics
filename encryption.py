@@ -2,6 +2,7 @@ from PIL import ImageTk, Image
 from functools import partial
 import tkinter as tk
 from encryptionfunctions import *
+from results import *
 
 class Encryption(tk.Frame):
 
@@ -65,9 +66,26 @@ class Encryption(tk.Frame):
 
 	def encrypt(self):
 		if self.default_algorithm.get() == 'Caesar Cipher':
-			tk.tkMessageBox.showinfo('Result',caesar_cipher(self.enter_message_text.get('1.0','end-1c'))[0])
-
+			result = ResultWindow()
+			temp = caesar_cipher(self.enter_message_text.get('1.0','end-1c'))
+			result.set_results(temp[0],temp[1])
+			self.enter_message_text.delete('1.0',tk.END)
+			result.mainloop()
+		if self.default_algorithm.get() == 'Emoji':
+			result = ResultWindow()
+			crypto = emoji_encrypt(self.enter_message_text.get('1.0','end-1c'))
+			result.set_results(crypto[0],crypto[1])
+			self.enter_message_text.delete('1.0',tk.END)
+			result.mainloop()
 
 
 	def decrypt(self):
-		pass
+		print(self.enter_crypto_text.get('1.0','end-1c'))
+		if self.default_algorithm.get() == 'Caesar Cipher':
+			result = ResultWindow()
+			result.set_results(decrypt_caesar_cipher(self.enter_crypto_text.get('1.0','end-1c'),self.enter_key_entry.get()),self.enter_key_entry.get())
+			self.enter_crypto_text.delete('1.0',tk.END)
+			self.enter_key_entry.delete(0,'end')
+			result.mainloop()		
+		if self.default_algorithm.get() == 'Emoji':
+			pass

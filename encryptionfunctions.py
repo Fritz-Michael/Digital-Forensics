@@ -33,18 +33,22 @@ def decrypt_caesar_cipher(message,key):
 	for symbol in message:
 		if symbol.isalpha():
 			num = ord(symbol)
-			num -= key
+			num -= int(key)
 
 			if symbol.isupper():
 				if num > ord('Z'):
 					num -= 26
 				elif num < ord('A'):
-					num += 26
+					x = ord('A') - num
+					y = ord('Z') - x
+					num = y + 1
 			elif symbol.islower():
 				if num > ord('z'):
 					num -= 26
 				elif num < ord('a'):
-					num += 26
+					x = ord('a') - num
+					y = ord('z') - x
+					num = y + 1
 
 			translated += chr(num)
 		else:
@@ -58,7 +62,7 @@ def emoji_encrypt(message):
 	'>:)', ":'(", 'XO', 'D:', '(:', ':/']
 
 	ciphertext = ''
-	cipher = 3
+	cipher = rand.randint(1,26)
 	isCaps = False
 	sub = 0
 	for char in message:
@@ -75,9 +79,43 @@ def emoji_encrypt(message):
 		else:
 			ciphertext = ciphertext + ' '
 
-	return ciphertext
+	return (ciphertext,cipher)
+
+
+def emoji_decrypt(message,key):
+	dictionary = [':)', ':D', ':(', 'XD', '>_<', '-_-', ';(', 'o_O', 'xC', ';D',
+	'xP', 'xb', 'B-)', 'B-(', 'X)', 'X(', ':3', ':*', ';)', '>:(',
+	'>:)', ":'(", 'XO', 'D:', '(:', ':/']
+	print(message)
+	temp = list(message)
+	num = []
+	num2 = []
+	x = 0
+	while x < len(message):
+		if ord(temp[x]) == 32:
+			num.append(32)
+		for y in range(len(dictionary)):
+			max = x+1
+			if max > len(message)-1:
+				pass
+			else:
+				if str(temp[x]+temp[x+1]) == dictionary[y]:
+					x += 1
+					num.append(y)
+					break
+			max = x+2
+			if max > len(message)-1:
+				pass
+			else:
+				if str(temp[x]+temp[x+1]+temp[x+2]) == dictionary[y]:
+					x += 2
+					num.append(y)
+		x += 1
+	num2 = list(map(lambda x: (x-key)%len(dictionary),num))
+	print(num2)
+
 
 
 if __name__ == '__main__':
-	temp = emoji_encrypt('Lorem Ipsum')
-	print(temp)
+	temp = emoji_encrypt('hello world')
+	emoji_decrypt(temp[0],temp[1])
