@@ -64,7 +64,7 @@ def emoji_encrypt(message):
 	ciphertext = ''
 	cipher = rand.randint(1,26)
 	isCaps = False
-	sub = 100
+	sub = 97
 	for char in message:
 		value = ord(char)
 		if value != 32:
@@ -122,7 +122,7 @@ def emoji_decrypt(message,key):
 		if x == 32:
 			characters.append(' ')
 		else:
-			characters.append(chr(x+100))
+			characters.append(chr(x+97))
 	return ''.join(characters)
 
 
