@@ -1,8 +1,10 @@
 from PIL import ImageTk, Image
 from functools import partial
 import tkinter as tk
+from tkinter import *
 from filerecoveryfunctions import *
 from formatdrivefunctions import *
+from deletev2 import *
 
 
 class CreateToolTip(object):
@@ -31,6 +33,18 @@ class CreateToolTip(object):
     def close(self, event=None):
         if self.tw:
             self.tw.destroy()
+
+
+class Wait(tk.Tk):
+
+	def __init__(self,*args,**kwargs):
+		tk.Tk.__init__(self,*args,**kwargs)
+		
+		self.label = tk.Label(self,text='Done!')
+		self.label.pack()
+
+	def exit(self):
+		self.quit()
 
 
 class CleanDrive(tk.Frame):
@@ -150,8 +164,11 @@ class CleanDrive(tk.Frame):
 
 
 	def scan_drive(self):
-		for x in range(30):
-			self.files_list.insert(x,x)
+		self.disable_buttons()
+		# path = '\\\\.\\' + self.default_drive.get() + ':'
+		# rootPath = self.default_drive.get()
+		# mft_location = mftlocation(path,roothPath)
+		self.enable_buttons()
 
 
 	def delete_files(self):
@@ -159,13 +176,17 @@ class CleanDrive(tk.Frame):
 
 
 	def format_drive(self):
-		path = self.default_drive + ':\\'
-		if default_file_format.get() == 'NTFS':
+		self.disable_buttons()
+		path = self.default_drive.get() + ':\\'
+		if self.default_file_format.get() == 'NTFS':
 			format_drive_to_NTFS(path)
-		elif default_file_format.get() == 'FAT32':
+		elif self.default_file_format.get() == 'FAT32':
 			format_drive_to_FAT32(path)
-		elif default_file_format.get() == 'exFAT':
+		elif self.default_file_format.get() == 'exFAT':
 			format_drive_to_exFAT(path)
+		self.enable_buttons()
+		temp = Wait()
+		temp.mainloop()
 
 
 	def advanced_settings(self):
@@ -186,3 +207,17 @@ class CleanDrive(tk.Frame):
 
 	def delete_sector(self):
 		pass			
+
+
+	def disable_buttons(self):
+		self.delete_files_button.config(state=tk.DISABLED)
+		self.format_drive_button.config(state=tk.DISABLED)
+		self.delete_sector_button.config(state=tk.DISABLED)
+		self.scan_drive_button.config(state=tk.DISABLED)
+
+
+	def enable_buttons(self):
+		self.delete_files_button.config(state=tk.ACTIVE)
+		self.format_drive_button.config(state=tk.ACTIVE)
+		self.delete_sector_button.config(state=tk.ACTIVE)
+		self.scan_drive_button.config(state=tk.ACTIVE)		

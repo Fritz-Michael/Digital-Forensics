@@ -60,20 +60,20 @@ def emoji_encrypt(message):
 	dictionary = [':)', ':D', ':(', 'XD', '>_<', '-_-', ';(', 'o_O', 'xC', ';D',
 	'xP', 'xb', 'B-)', 'B-(', 'X)', 'X(', ':3', ':*', ';)', '>:(',
 	'>:)', ":'(", 'XO', 'D:', '(:', ':/']
-
+	message = message.lower()
 	ciphertext = ''
 	cipher = rand.randint(1,26)
 	isCaps = False
-	sub = 0
+	sub = 100
 	for char in message:
 		value = ord(char)
 		if value != 32:
 			if value < 95:
 				isCaps = True
-				sub = 65
+				#sub = 65
 			else:
 				isCaps = False
-				sub = 97
+				#sub = 97
 			temp = (value - sub + cipher) % len(dictionary)
 			ciphertext = ciphertext + dictionary[temp]
 		else:
@@ -86,7 +86,6 @@ def emoji_decrypt(message,key):
 	dictionary = [':)', ':D', ':(', 'XD', '>_<', '-_-', ';(', 'o_O', 'xC', ';D',
 	'xP', 'xb', 'B-)', 'B-(', 'X)', 'X(', ':3', ':*', ';)', '>:(',
 	'>:)', ":'(", 'XO', 'D:', '(:', ':/']
-	print(message)
 	temp = list(message)
 	num = []
 	num2 = []
@@ -111,8 +110,20 @@ def emoji_decrypt(message,key):
 					x += 2
 					num.append(y)
 		x += 1
-	num2 = list(map(lambda x: (x-key)%len(dictionary),num))
-	print(num2)
+	# num2 = list(map(lambda x: (int(x)-int(key))%len(dictionary),num))
+	num2 = []
+	for x in num:
+		if x == 32:
+			num2.append(32)
+		else:
+			num2.append((int(x)-int(key))%len(dictionary))
+	characters = []
+	for x in num2:
+		if x == 32:
+			characters.append(' ')
+		else:
+			characters.append(chr(x+100))
+	return ''.join(characters)
 
 
 def encrypt_XOR(message):
@@ -131,5 +142,4 @@ def decrypt_XOR(crypto,key):
 
 
 if __name__ == '__main__':
-	temp = encrypt_XOR('hello')
-	print(decrypt_XOR(temp[0],temp[1]))
+	print((-12)%26)

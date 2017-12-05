@@ -31,5 +31,5 @@ def format_drive(Drive, Format, Title):
 
 
 if __name__ == '__main__':
-	format_drive_to_FAT32('E:\\')
 	
+	format_drive_to_NTFS('E:\\')
