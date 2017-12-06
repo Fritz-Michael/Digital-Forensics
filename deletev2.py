@@ -194,12 +194,11 @@ def getdloc(offset, path, rootpath): # change rootpath later for byte position o
 
 def deletion(flist, method, n_pass=0):
     if flist["is_folder"]:
-        for directory in flist:
-            for child in directory["list_child"]:
-                if method != 3:
-                    file_write(child, method)
-                else:
-                    file_write(child,method,npass=n_pass)
+        for child in flist["list_child"]:
+            if method != 3:
+                file_write(child, method)
+            else:
+                file_write(child,method,npass=n_pass)
         shutil.rmtree(flist["dir_path"])
     else:
         if method != 3:
