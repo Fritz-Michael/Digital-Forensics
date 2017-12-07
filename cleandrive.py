@@ -2,6 +2,7 @@ from PIL import ImageTk, Image
 from functools import partial
 import tkinter as tk
 from tkinter import *
+from tkinter import ttk
 from filerecoveryfunctions import *
 from formatdrivefunctions import *
 from deletev2 import *
@@ -79,7 +80,19 @@ class CleanDrive(tk.Frame):
 		self.set_drives_menu()
 		self.scan_drive_button = tk.Button(self.alignment_frames[0],text='Scan Drive',command=self.scan_drive)
 		self.delete_files_label = tk.Label(self.file_deletion_frame,text='File Deletion')
-		self.files_list = tk.Listbox(self.file_deletion_frame,selectmode=tk.MULTIPLE,height=7,width=100)
+		#self.files_list = tk.Listbox(self.file_deletion_frame,selectmode=tk.MULTIPLE,height=7,width=100)
+
+		self.files_list = ttk.Treeview(self.file_deletion_frame,height=5)
+		self.files_list['columns'] = ('written','accessed','created')
+		self.files_list.column('written',width=100)
+		self.files_list.column('accessed',width=100)
+		self.files_list.column('created',width=100)
+		self.files_list.heading('written',text='Written')
+		self.files_list.heading('accessed',text='Accessed')
+		self.files_list.heading('created',text='Created')
+		self.files_list.insert('',0,text='Sample',values=('1','2','3'))
+		self.files_list.insert('',0,text='Sample',values=('2','3','4'))
+
 		self.select_deselect = tk.Checkbutton(self.alignment_frames[1],text='Select/Deselect All',variable=self.select_value,command=self.select_deselect_files)
 		self.advanced_button = tk.Checkbutton(self.alignment_frames[1],text='Advanced',variable=self.is_advanced,command=self.advanced_settings)
 		self.delete_files_button = tk.Button(self.file_deletion_frame,text='Delete Files',command=self.delete_files)
@@ -200,7 +213,7 @@ class CleanDrive(tk.Frame):
 
 	def select_deselect_files(self):
 		if self.select_value.get() == 1:
-			self.files_list.select_set(0,tk.END)
+			print(self.files_list.get_children()[0].text)
 		else:
 			self.files_list.selection_clear(0,tk.END)			
 
