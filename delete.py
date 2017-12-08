@@ -67,7 +67,6 @@ def getfiles(path, rootpath):
     sector = sector + 44
     bytepos = int(getbytespersector(rootpath) * sector)
     ifmft = True
-    ctr = 0
     while ifmft:
         drive.seek(bytepos)
         if drive.read(4).decode('utf-8') == 'FILE':
@@ -92,9 +91,7 @@ def getfiles(path, rootpath):
             ifmft = False
         sector = sector + 2
         bytepos = int(getbytespersector(rootpath) * sector)
-        ctr += 1
     drive.close()
-    print(ctr)
     return flist
 
 def getdloc(offset, path, rootpath): # change rootpath later for byte position of MFT record 
@@ -119,7 +116,14 @@ def getdloc(offset, path, rootpath): # change rootpath later for byte position o
         isfolder = True
     else:
         isfolder = False
+    drive.seek(currboff)
+    drive.seek(nattroff, 1)
+    print(nattroff)
+    curattrhead = binascii.hexlify(drive.read(4))
 
+    if curattrhead != b'10000000':
+        return None
+        
     while curattrhead != b'30000000':
         drive.seek(currboff)
         drive.seek(nattroff, 1)
@@ -136,8 +140,12 @@ def getdloc(offset, path, rootpath): # change rootpath later for byte position o
     if fname.find("~",0, fsize) != -1:
         drive.seek(currboff)
         drive.seek(nattroff, 1)
-        currboff = drive.tell()
         curattrhead = binascii.hexlify(drive.read(4)) #atrib type
+        if curattrhead != b'30000000':
+            drive.seek(currboff)
+            curattrhead = binascii.hexlify(drive.read(4))
+        else:
+            currboff = drive.tell() - 4
         nattroff = int.from_bytes(drive.read(4),byteorder='little') #attrib size
         drive.seek(16, 1)
         pdir = int.from_bytes(drive.read(6),byteorder='little')
@@ -152,7 +160,7 @@ def getdloc(offset, path, rootpath): # change rootpath later for byte position o
 
     while curattrhead != b'80000000':
         drive.seek(currboff)
-        drive.seek(int(nattroff), 1)
+        drive.seek(nattroff, 1)
         currboff = drive.tell()
         curattrhead = binascii.hexlify(drive.read(4)) #atrib type
         nattroff = int.from_bytes(drive.read(4),byteorder='little') #attrib size
@@ -258,49 +266,49 @@ def file_write(selected_file, method, npass=0):
                 drive.write((struct.pack('s', character)))
 
 """
-	INSTRUCTIONS:
+    INSTRUCTIONS:
 
-	call getfiles(path, rootpath) to scan for NOT DELETED MFT entries; returns list of NOT DELETED MFT entries
-		args:
-			path: the drive itself
-			rootpath: drive letter
-		ex: files = getfiles('\\\\.\\H:', 'H')
+    call getfiles(path, rootpath) to scan for NOT DELETED MFT entries; returns list of NOT DELETED MFT entries
+        args:
+            path: the drive itself
+            rootpath: drive letter
+        ex: files = getfiles('\\\\.\\H:', 'H')
 
-	Note: change lines 110 - 117 into:
-		    if mftstatus == b'0100' or mftstatus == b'0300':
-		        drive.close()
-		        return None
+    Note: change lines 110 - 117 into:
+            if mftstatus == b'0100' or mftstatus == b'0300':
+                drive.close()
+                return None
 
-		    if mftstatus == b'0200':
-		        isfolder = True
-		    else:
-		        isfolder = False
-		if same algo will be used for scanning DELETED MFT entries
-		only dict["data_start"], dict["file_name"] and dict["multi_run"] is important
+            if mftstatus == b'0200':
+                isfolder = True
+            else:
+                isfolder = False
+        if same algo will be used for scanning DELETED MFT entries
+        only dict["data_start"], dict["file_name"] and dict["multi_run"] is important
 
-	call deletion(flist, method, n_pass=0) to delete selected file/folder_name
-		args:
-			flist: dictionary of parent/folder or child/files
-			method: method of deletion, 0 - zero fill, 1 - secure wipe, 2 - schneier method, 3 - random data
-			n_pass (optional): indicates number of passes when method == 3
+    call deletion(flist, method, n_pass=0) to delete selected file/folder_name
+        args:
+            flist: dictionary of parent/folder or child/files
+            method: method of deletion, 0 - zero fill, 1 - secure wipe, 2 - schneier method, 3 - random data
+            n_pass (optional): indicates number of passes when method == 3
 
-		ex: deletion(folder_dict, 3, n_pass=7)
-			deletion(file_dict, 1)
+        ex: deletion(folder_dict, 3, n_pass=7)
+            deletion(file_dict, 1)
 
-	important dictionary key values:
-		'is_folder' (bool): checks if entry is a folder
-		'file_name' (str): filename of the entry
-		'folder_name' (str): filename of folder
-		'parent_directory' (int): record number of parent directory 
-		'record_number'(int): record number of the entry itself 
-		'num_child' (int): number of child/subdirectories in a folder
-		'dir_path' (str): path of the file/folder
-		'list_child' (list): list of child/subdirectories that is also dict
+    important dictionary key values:
+        'is_folder' (bool): checks if entry is a folder
+        'file_name' (str): filename of the entry
+        'folder_name' (str): filename of folder
+        'parent_directory' (int): record number of parent directory 
+        'record_number'(int): record number of the entry itself 
+        'num_child' (int): number of child/subdirectories in a folder
+        'dir_path' (str): path of the file/folder
+        'list_child' (list): list of child/subdirectories that is also dict
 
 
-	key values exclusive to child:
-		'multi_run' (bool): checks if child has multiple data runs
-		'data_start' (int): byte position of starting data block
-		'data_start' (list(int,int)): if multi_run is true contains byte position and size of multiple data blocks
-		'data_totalsize' (int): total size of data
+    key values exclusive to child:
+        'multi_run' (bool): checks if child has multiple data runs
+        'data_start' (int): byte position of starting data block
+        'data_start' (list(int)): if multi_run is true contains byte position of multiple data blocks
+        'data_totalsize' (int): total size of data
 """
