@@ -164,7 +164,10 @@ def getdloc(offset, path, rootpath): # change rootpath later for byte position o
             return None
         ctr += 1
         drive.seek(currboff)
-        drive.seek(nattroff, 1)
+        try:
+            drive.seek(nattroff, 1)
+        except OSError:
+            pass
         currboff = drive.tell()
         curattrhead = binascii.hexlify(drive.read(4)) #atrib type
         nattroff = int.from_bytes(drive.read(4),byteorder='little') #attrib size

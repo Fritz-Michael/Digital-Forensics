@@ -172,7 +172,8 @@ class CleanDrive(tk.Frame):
 		print(path)
 		print(rootPath)
 		self.files_in_drive = getfiles(path,rootPath)
-		map(lambda x: self.files_list.insert(x['file_name']),self.files_in_drive)
+		print(self.files_in_drive)
+		#map(lambda x: self.files_list.insert(tk.END,x['file_name']),self.files_in_drive)
 		temp = Wait()
 		temp.mainloop()
 
