@@ -61,9 +61,10 @@ def getfiles(path, rootpath):
     sector = mftlocation(path, rootpath) / getbytespersector(rootpath) + 10
     bytepos = int(getbytespersector(rootpath) * sector)
     flist = []
+    file_path = ''
     data = getdloc(bytepos, path, rootpath)
     flist.append({'is_folder': data["is_folder"],'folder_name': data["file_name"], 'record_number': data["MFT_rec"], 'parent_directory': data["parent_dir"], 'dir_path': rootpath + ":", 'num_child': 0, 'list_child': []})
-    sector = sector + 68
+    sector = sector + 44
     bytepos = int(getbytespersector(rootpath) * sector)
     ifmft = True
     ctr = 0
@@ -134,7 +135,7 @@ def getdloc(offset, path, rootpath): # change rootpath later for byte position o
 
     if fname.find("~",0, fsize) != -1:
         drive.seek(currboff)
-        drive.seek(natttroff, 1)
+        drive.seek(nattroff, 1)
         currboff = drive.tell()
         curattrhead = binascii.hexlify(drive.read(4)) #atrib type
         nattroff = int.from_bytes(drive.read(4),byteorder='little') #attrib size
@@ -151,7 +152,7 @@ def getdloc(offset, path, rootpath): # change rootpath later for byte position o
 
     while curattrhead != b'80000000':
         drive.seek(currboff)
-        drive.seek(nattroff, 1)
+        drive.seek(int(nattroff), 1)
         currboff = drive.tell()
         curattrhead = binascii.hexlify(drive.read(4)) #atrib type
         nattroff = int.from_bytes(drive.read(4),byteorder='little') #attrib size
