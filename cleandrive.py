@@ -176,14 +176,14 @@ class CleanDrive(tk.Frame):
 
 
 	def scan_drive(self):
-		self.disable_buttons()
 		path = '\\\\.\\' + self.default_drive.get() + ':'
 		rootPath = self.default_drive.get()
-		self.files_in_drive = getfiles(path,roothPath)
-		print(self.files_in_drive)
+		print(path)
+		print(rootPath)
+		self.files_in_drive = getfiles(path,rootPath)
+		print(*self.files_in_drive)
 		temp = Wait()
 		temp.mainloop()
-		self.enable_buttons()
 
 
 	def delete_files(self):

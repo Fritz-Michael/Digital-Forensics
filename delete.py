@@ -58,7 +58,7 @@ def mftlocation(path, rootPath):
 
 def getfiles(path, rootpath):
     drive = open(path, 'rb')
-    sector = mftlocation(path, rootpath) / getbytespersector(rootpath) + 10
+    sector = mftlocation(path, rootpath) / getbytespersector(rootpath)
     bytepos = int(getbytespersector(rootpath) * sector)
     flist = []
     data = getdloc(bytepos, path, rootpath)
@@ -72,6 +72,7 @@ def getfiles(path, rootpath):
             data = getdloc(bytepos, path, rootpath)
             if data != None:
                 if data["is_folder"]:
+                    print(drive.tell())
                     for directory in flist:
                         if directory["record_number"] == data["parent_dir"]:
                             file_path = directory["dir_path"] + "\\" + data["file_name"]
@@ -88,7 +89,8 @@ def getfiles(path, rootpath):
             pass
         else:
             ifmft = False
-        sector = sector + 2
+            print('hello')
+        sector = sector + 1
         bytepos = int(getbytespersector(rootpath) * sector)
     drive.close()
     return flist
