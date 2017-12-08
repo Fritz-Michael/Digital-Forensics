@@ -213,7 +213,7 @@ class CleanDrive(tk.Frame):
 
 	def select_deselect_files(self):
 		if self.select_value.get() == 1:
-			print(self.files_list.get_children()[0].text)
+			print(self.files_list.get_children())
 		else:
 			self.files_list.selection_clear(0,tk.END)			
 
