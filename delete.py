@@ -12,6 +12,7 @@ import multiprocessing
 from multiprocessing import Manager
 import struct
 import random
+import shutil
 
 def gettotalsectors(path):
     drive = open(path,'rb')
@@ -65,26 +66,26 @@ def getfiles(path, rootpath):
     sector = sector + 68
     bytepos = int(getbytespersector(rootpath) * sector)
     ifmft = True
-
     while ifmft:
         drive.seek(bytepos)
         if drive.read(4).decode('utf-8') == 'FILE':
             data = getdloc(bytepos, path, rootpath)
-            if data["is_folder"]:
-                for directory in flist:
-                    if directory["record_number"] == data["parent_dir"]:
-                        file_path = directory["dir_path"] + "\\" + data["file_name"]
-                        directory["num_child"] += 1
-                flist.append({'is_folder': data["is_folder"],'folder_name': data["file_name"], 'record_number': data["MFT_rec"], 'parent_directory': data["parent_dir"], 'dir_path': file_path, 'num_child': 0, 'list_child': []})             
-            else:
-                for directory in flist:
-                    if directory["record_number"] == data["parent_dir"]:
-                        data["dir_path"] = directory["dir_path"] + '\\' + data["file_name"]
-                        directory["num_child"] += 1
-                        directory["list_child"].append(data)
+            if data != None:
+                if data["is_folder"]:
+                    for directory in flist:
+                        if directory["record_number"] == data["parent_dir"]:
+                            file_path = directory["dir_path"] + "\\" + data["file_name"]
+                            directory["num_child"] += 1
+                    flist.append({'is_folder': data["is_folder"],'folder_name': data["file_name"], 'record_number': data["MFT_rec"], 'parent_directory': data["parent_dir"], 'dir_path': file_path, 'num_child': 0, 'list_child': []})             
+                else:
+                    for directory in flist:
+                        if directory["record_number"] == data["parent_dir"]:
+                            data["dir_path"] = directory["dir_path"] + '\\' + data["file_name"]
+                            directory["num_child"] += 1
+                            directory["list_child"].append(data)
             
         elif drive.read(4).decode('utf-8') == 'BAAD':
-            flist.append(None)
+            pass
         else:
             ifmft = False
         sector = sector + 2
@@ -106,7 +107,7 @@ def getdloc(offset, path, rootpath): # change rootpath later for byte position o
     drive.seek(20, 1)
     recnum = int.from_bytes(drive.read(4),byteorder='little')
 
-    if mftstatus == b'0000':
+    if mftstatus == b'0000' or mftstatus == b'0200':
         drive.close()
         return None
 
@@ -191,23 +192,33 @@ def getdloc(offset, path, rootpath): # change rootpath later for byte position o
         drive.close()
         return {'is_folder': False, 'file_name': fname, 'parent_dir': pdir, 'MFT_rec': recnum, 'multi_run': False, 'data_start': dstart, 'data_totalsize': dlen}
 
-def deletion(isfolder, datarun, datasize, method, fpath,  npass=0):
-    drive = open(fpath,'r+b')
+def deletion(flist, method, n_pass=0):
+    if flist["is_folder"]:
+        for child in flist["list_child"]:
+            if method != 3:
+                file_write(child, method)
+            else:
+                file_write(child,method,npass=n_pass)
+        shutil.rmtree(flist["dir_path"])
+    else:
+        if method != 3:
+            file_write(flist, method)
+        else:
+            file_write(flist, method, npass=n_pass)
 
-    # if isfolder:
-    #     #loop tru all files and delete all
+        os.remove(flist["dir_path"])
 
-    drive.seek(datarun)
-    method = 0
+def file_write(selected_file, method, npass=0):
+    drive = open(selected_file["dir_path"],'r+b')
 
     if method == 0:
         # zero fill
-        for ctr in range(datasize):
+        for ctr in range(selected_file["data_totalsize"]):
             drive.write(struct.pack('s', b'\x00'))
 
     if method == 1:
         # secure wipe
-        for ctr in range(datasize):
+        for ctr in range(selected_file["data_totalsize"]):
             # randomize
             dictio = ['00','11']
             rnd = random.choice(dictio)
@@ -219,14 +230,14 @@ def deletion(isfolder, datarun, datasize, method, fpath,  npass=0):
         # schneier
         for outctr in range(7):
             if outctr == 0:
-                for ctr in range(datasize):
+                for ctr in range(selected_file["data_totalsize"]):
                     drive.write(struct.pack('s', b'\x00'))
             elif outctr == 1:
-                for ctr in range(datasize):
+                for ctr in range(selected_file["data_totalsize"]):
                     drive.write(struct.pack('s', b'\x11'))
             else:
                 dictio = ['0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f']
-                for ctr in range(datasize):
+                for ctr in range(selected_file["data_totalsize"]):
                     character = random.choice(dictio)
                     character = character + random.choice(dictio)
                     character = binascii.unhexlify(character)
@@ -236,20 +247,56 @@ def deletion(isfolder, datarun, datasize, method, fpath,  npass=0):
       # random data
       dictio = ['0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f']
       for outctr in range(npass):
-          for ctr in range(datasize):
+          for ctr in range(selected_file["data_totalsize"]):
                 character = random.choice(dictio)
                 character = character + random.choice(dictio)
                 character = binascii.unhexlify(character)
                 drive.write((struct.pack('s', character)))
 
-    os.remove(fpath)
+"""
+	INSTRUCTIONS:
 
-if __name__ == '__main__':
-    dirs = []
+	call getfiles(path, rootpath) to scan for NOT DELETED MFT entries; returns list of NOT DELETED MFT entries
+		args:
+			path: the drive itself
+			rootpath: drive letter
+		ex: files = getfiles('\\\\.\\H:', 'H')
 
-    dirs = getfiles('\\\\.\\H:', 'H')
+	Note: change lines 110 - 117 into:
+		    if mftstatus == b'0100' or mftstatus == b'0300':
+		        drive.close()
+		        return None
 
-    for wew in dirs:
-        print(wew["dir_path"])
-        for wat in wew["list_child"]:
-            print(wat["dir_path"])
+		    if mftstatus == b'0200':
+		        isfolder = True
+		    else:
+		        isfolder = False
+		if same algo will be used for scanning DELETED MFT entries
+		only dict["data_start"], dict["file_name"] and dict["multi_run"] is important
+
+	call deletion(flist, method, n_pass=0) to delete selected file/folder_name
+		args:
+			flist: dictionary of parent/folder or child/files
+			method: method of deletion, 0 - zero fill, 1 - secure wipe, 2 - schneier method, 3 - random data
+			n_pass (optional): indicates number of passes when method == 3
+
+		ex: deletion(folder_dict, 3, n_pass=7)
+			deletion(file_dict, 1)
+
+	important dictionary key values:
+		'is_folder' (bool): checks if entry is a folder
+		'file_name' (str): filename of the entry
+		'folder_name' (str): filename of folder
+		'parent_directory' (int): record number of parent directory 
+		'record_number'(int): record number of the entry itself 
+		'num_child' (int): number of child/subdirectories in a folder
+		'dir_path' (str): path of the file/folder
+		'list_child' (list): list of child/subdirectories that is also dict
+
+
+	key values exclusive to child:
+		'multi_run' (bool): checks if child has multiple data runs
+		'data_start' (int): byte position of starting data block
+		'data_start' (list(int,int)): if multi_run is true contains byte position and size of multiple data blocks
+		'data_totalsize' (int): total size of data
+"""

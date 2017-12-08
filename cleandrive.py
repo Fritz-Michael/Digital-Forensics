@@ -5,7 +5,8 @@ from tkinter import *
 from tkinter import ttk
 from filerecoveryfunctions import *
 from formatdrivefunctions import *
-from deletev2 import *
+from delete import *
+from readdrive import *
 
 
 class CreateToolTip(object):
@@ -90,8 +91,6 @@ class CleanDrive(tk.Frame):
 		self.files_list.heading('written',text='Written')
 		self.files_list.heading('accessed',text='Accessed')
 		self.files_list.heading('created',text='Created')
-		self.files_list.insert('',0,text='Sample',values=('1','2','3'))
-		self.files_list.insert('',0,text='Sample',values=('2','3','4'))
 
 		self.select_deselect = tk.Checkbutton(self.alignment_frames[1],text='Select/Deselect All',variable=self.select_value,command=self.select_deselect_files)
 		self.advanced_button = tk.Checkbutton(self.alignment_frames[1],text='Advanced',variable=self.is_advanced,command=self.advanced_settings)
@@ -178,9 +177,12 @@ class CleanDrive(tk.Frame):
 
 	def scan_drive(self):
 		self.disable_buttons()
-		# path = '\\\\.\\' + self.default_drive.get() + ':'
-		# rootPath = self.default_drive.get()
-		# mft_location = mftlocation(path,roothPath)
+		path = '\\\\.\\' + self.default_drive.get() + ':'
+		rootPath = self.default_drive.get()
+		self.files_in_drive = getfiles(path,roothPath)
+		print(self.files_in_drive)
+		temp = Wait()
+		temp.mainloop()
 		self.enable_buttons()
 
 
