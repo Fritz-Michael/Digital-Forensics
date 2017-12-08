@@ -107,7 +107,7 @@ def getdloc(offset, path, rootpath): # change rootpath later for byte position o
     mftstatus = binascii.hexlify(drive.read(2))
     drive.seek(20, 1)
     recnum = int.from_bytes(drive.read(4),byteorder='little')
-
+    print(currMFTrec)
     if mftstatus == b'0000' or mftstatus == b'0200':
         drive.close()
         return None
@@ -158,7 +158,11 @@ def getdloc(offset, path, rootpath): # change rootpath later for byte position o
         drive.close()
         return {'is_folder': True, 'file_name': fname, 'parent_dir': pdir, 'MFT_rec': recnum}
 
+    ctr = 0
     while curattrhead != b'80000000':
+        if ctr > 3:
+            return None
+        ctr += 1
         drive.seek(currboff)
         drive.seek(nattroff, 1)
         currboff = drive.tell()

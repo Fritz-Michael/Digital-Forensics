@@ -81,16 +81,7 @@ class CleanDrive(tk.Frame):
 		self.set_drives_menu()
 		self.scan_drive_button = tk.Button(self.alignment_frames[0],text='Scan Drive',command=self.scan_drive)
 		self.delete_files_label = tk.Label(self.file_deletion_frame,text='File Deletion')
-		#self.files_list = tk.Listbox(self.file_deletion_frame,selectmode=tk.MULTIPLE,height=7,width=100)
-
-		self.files_list = ttk.Treeview(self.file_deletion_frame,height=5)
-		self.files_list['columns'] = ('written','accessed','created')
-		self.files_list.column('written',width=100)
-		self.files_list.column('accessed',width=100)
-		self.files_list.column('created',width=100)
-		self.files_list.heading('written',text='Written')
-		self.files_list.heading('accessed',text='Accessed')
-		self.files_list.heading('created',text='Created')
+		self.files_list = tk.Listbox(self.file_deletion_frame,selectmode=tk.MULTIPLE,height=7,width=100)
 
 		self.select_deselect = tk.Checkbutton(self.alignment_frames[1],text='Select/Deselect All',variable=self.select_value,command=self.select_deselect_files)
 		self.advanced_button = tk.Checkbutton(self.alignment_frames[1],text='Advanced',variable=self.is_advanced,command=self.advanced_settings)
@@ -181,7 +172,7 @@ class CleanDrive(tk.Frame):
 		print(path)
 		print(rootPath)
 		self.files_in_drive = getfiles(path,rootPath)
-		print(*self.files_in_drive)
+		map(lambda x: self.files_list.insert(x['file_name']),self.files_in_drive)
 		temp = Wait()
 		temp.mainloop()
 
