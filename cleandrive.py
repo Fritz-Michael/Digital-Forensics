@@ -179,6 +179,15 @@ class CleanDrive(tk.Frame):
 
 
 	def delete_files(self):
+		if self.default_algorithm.get() == 'Zero fill':
+			method = 0
+		if self.default_algorithm.get() == 'Secure Erase':
+			method = 1
+		if self.default_algorithm.get() == 'Schneier':
+			method = 2
+		if self.default_algorithm.get() == 'Random Data':
+			method = 3
+
 		selection = self.files_list.curselection()
 		value = list(map(lambda x: self.files_list.get(x),selection))
 		delete_files = []
@@ -192,7 +201,7 @@ class CleanDrive(tk.Frame):
 						delete_files.append(files)
 						break
 		for files in delete_files:
-			deletion(files,self.default_algorithm)
+			deletion(files,method)
 		self.files_list.delete(0,tk.END)
 		path = '\\\\.\\' + self.default_drive.get() + ':'
 		rootPath = self.default_drive.get()
@@ -237,7 +246,22 @@ class CleanDrive(tk.Frame):
 
 
 	def delete_sector(self):
-		pass			
+		if self.default_algorithm.get() == 'Zero fill':
+			method = 0
+		if self.default_algorithm.get() == 'Secure Erase':
+			method = 1
+		if self.default_algorithm.get() == 'Schneier':
+			method = 2
+		if self.default_algorithm.get() == 'Random Data':
+			method = 3
+
+		path = '\\\\.\\' + self.default_drive.get() + ':'
+		rootPath = self.default_drive.get()
+		try:
+			int(self.sector_number_entry.get())
+			delete_sectors(path,rootPath,int(self.sector_number_entry.get()),method)
+		except ValueError:
+			self.sector_number_entry.delete(0,tk.END)
 
 
 	def disable_buttons(self):

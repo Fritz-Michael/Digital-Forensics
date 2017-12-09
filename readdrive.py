@@ -27,7 +27,9 @@ def get_file_info(path,inodes):
 	return (filelist,written,accessed,created)
 
 if __name__ == '__main__':
-	start = time.time()
-	path = '\\\\.\\E:'
-	get_file_info(path,get_inodes(path))
-	print('Total runtime: {}'.format(time.time()-start))
+	# start = time.time()
+	# path = '\\\\.\\E:'
+	# print(get_file_system(path))
+	# print('Total runtime: {}'.format(time.time()-start))
+	for x in range(7):
+		print(x)
