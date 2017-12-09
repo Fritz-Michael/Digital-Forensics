@@ -271,11 +271,12 @@ def file_write(selected_file, method, npass=0):
                 drive.write((struct.pack('s', character)))
 
 def check_valid(sector, flist, method, n_pass=0):
-    for file in flist:
-        if not file["is_folder"]:
-            if sector <= (file["data_totalsize"] + file["data_start"]) / 512 and sector => file["data_start"] / 512:
-                deletion(file, method, n_pass)
-                return True
+    for folder in flist:
+        for file in folder["list_child"]:
+            if not file["multi_run"]:
+                if sector <= (file["data_totalsize"] + file["data_start"]) / 512 and sector >=( file["data_start"] / 512):
+                    deletion(file, method, n_pass)
+                    return True
     return False
 
 """
