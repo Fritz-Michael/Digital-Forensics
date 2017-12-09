@@ -1,4 +1,3 @@
-from PIL import ImageTk, Image
 from functools import partial
 import tkinter as tk
 from tkinter import *
@@ -172,13 +171,27 @@ class CleanDrive(tk.Frame):
 	def scan_drive(self):
 		path = '\\\\.\\' + self.default_drive.get() + ':'
 		rootPath = self.default_drive.get()
-		self.files_in_drive = getfiles(path,rootPath)
-		for directory in self.files_in_drive:
-			self.files_list.insert(tk.END,directory['dir_path'])
-			for files in directory['list_child']:
-				self.files_list.insert(tk.END,files['dir_path'])
-		temp = Wait()
-		temp.mainloop()
+		if 'File System Type: NTFS' in get_file_system(path):
+			print('hi')
+			self.files_in_drive = getfiles(path,rootPath)
+			for directory in self.files_in_drive:
+				self.files_list.insert(tk.END,directory['dir_path'])
+				for files in directory['list_child']:
+					self.files_list.insert(tk.END,files['dir_path'])
+			temp = Wait()
+			temp.mainloop()
+		elif 'File System Type: FAT32' in get_file_system(path):
+			print('hello')
+			self.files_in_drive = get_file_info(path,get_inodes(path))
+			print(self.files_in_drive)
+			for files in self.files_in_drive:
+				self.files_list.insert(tk.END,files)
+			temp = Wait()
+			temp.mainloop()
+		else:
+			temp = Wait()
+			temp.set_message('Unknown File System')
+			temp.mainloop()	
 
 
 	def delete_files(self):
@@ -190,32 +203,35 @@ class CleanDrive(tk.Frame):
 			method = 2
 		if self.default_algorithm.get() == 'Random Data':
 			method = 3
-
-		selection = self.files_list.curselection()
-		value = list(map(lambda x: self.files_list.get(x),selection))
-		delete_files = []
-		for filename in value:
-			for directory in self.files_in_drive:
-				if directory['dir_path'] == filename:
-					delete_files.append(directory)
-					break
-				for files in directory['list_child']:
-					if files['dir_path'] == filename:
-						delete_files.append(files)
-						break
-		for files in delete_files:
-			deletion(files,method)
-		self.files_list.delete(0,tk.END)
 		path = '\\\\.\\' + self.default_drive.get() + ':'
-		rootPath = self.default_drive.get()
-		self.files_in_drive = getfiles(path,rootPath)
-		for directory in self.files_in_drive:
-			self.files_list.insert(tk.END,directory['dir_path'])
-			for files in directory['list_child']:
-				self.files_list.insert(tk.END,files['dir_path'])
-		temp = Wait()
-		temp.mainloop()
-
+		if 'File System Type: NTFS' in get_file_system(path):
+			selection = self.files_list.curselection()
+			value = list(map(lambda x: self.files_list.get(x),selection))
+			delete_files = []
+			for filename in value:
+				for directory in self.files_in_drive:
+					if directory['dir_path'] == filename:
+						delete_files.append(directory)
+						break
+					for files in directory['list_child']:
+						if files['dir_path'] == filename:
+							delete_files.append(files)
+							break
+			for files in delete_files:
+				deletion(files,method)
+			self.files_list.delete(0,tk.END)
+			rootPath = self.default_drive.get()
+			self.files_in_drive = getfiles(path,rootPath)
+			for directory in self.files_in_drive:
+				self.files_list.insert(tk.END,directory['dir_path'])
+				for files in directory['list_child']:
+					self.files_list.insert(tk.END,files['dir_path'])
+			temp = Wait()
+			temp.mainloop()
+		else:
+			temp = Wait()
+			temp.set_message('For NTFS Only')
+			temp.mainloop()
 
 
 	def format_drive(self):
@@ -249,29 +265,34 @@ class CleanDrive(tk.Frame):
 
 
 	def delete_sector(self):
-		if self.default_algorithm.get() == 'Zero fill':
-			method = 0
-		if self.default_algorithm.get() == 'Secure Erase':
-			method = 1
-		if self.default_algorithm.get() == 'Schneier':
-			method = 2
-		if self.default_algorithm.get() == 'Random Data':
-			method = 3
-
 		path = '\\\\.\\' + self.default_drive.get() + ':'
-		rootPath = self.default_drive.get()
-		self.files_in_drive = getfiles(path,rootPath)
-		try:
-			int(self.sector_number_entry.get())
-			if check_valid(int(self.sector_number_entry.get()),self.files_in_drive,method):
-				temp = Wait()
-				temp.mainloop()
-			else:
-				temp = Wait()
-				temp.set_message('Invalid Sector!')
-				temp.mainloop()
-		except ValueError:
-			self.sector_number_entry.delete(0,tk.END)
+		if 'File System Type: NTFS' in get_file_system(path):
+			if self.default_algorithm.get() == 'Zero fill':
+				method = 0
+			if self.default_algorithm.get() == 'Secure Erase':
+				method = 1
+			if self.default_algorithm.get() == 'Schneier':
+				method = 2
+			if self.default_algorithm.get() == 'Random Data':
+				method = 3
+
+			rootPath = self.default_drive.get()
+			self.files_in_drive = getfiles(path,rootPath)
+			try:
+				int(self.sector_number_entry.get())
+				if check_valid(int(self.sector_number_entry.get()),self.files_in_drive,method):
+					temp = Wait()
+					temp.mainloop()
+				else:
+					temp = Wait()
+					temp.set_message('Invalid Sector!')
+					temp.mainloop()
+			except ValueError:
+				self.sector_number_entry.delete(0,tk.END)
+		else:
+			temp = Wait()
+			temp.set_message('NTFS Only!')
+			temp.mainloop()
 
 
 	def disable_buttons(self):

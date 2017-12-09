@@ -1,5 +1,4 @@
 import tkinter as tk
-from PIL import ImageTk, Image
 from functools import partial
 from filerecovery import *
 from cleandrive import *
