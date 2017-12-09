@@ -169,17 +169,41 @@ class CleanDrive(tk.Frame):
 	def scan_drive(self):
 		path = '\\\\.\\' + self.default_drive.get() + ':'
 		rootPath = self.default_drive.get()
-		print(path)
-		print(rootPath)
 		self.files_in_drive = getfiles(path,rootPath)
-		print(self.files_in_drive)
-		#map(lambda x: self.files_list.insert(tk.END,x['file_name']),self.files_in_drive)
+		for directory in self.files_in_drive:
+			self.files_list.insert(tk.END,directory['dir_path'])
+			for files in directory['list_child']:
+				self.files_list.insert(tk.END,files['dir_path'])
 		temp = Wait()
 		temp.mainloop()
 
 
 	def delete_files(self):
-		pass 
+		selection = self.files_list.curselection()
+		value = list(map(lambda x: self.files_list.get(x),selection))
+		delete_files = []
+		for filename in value:
+			for directory in self.files_in_drive:
+				if directory['dir_path'] == filename:
+					delete_files.append(directory)
+					break
+				for files in directory['list_child']:
+					if files['dir_path'] == filename:
+						delete_files.append(files)
+						break
+		for files in delete_files:
+			deletion(files,self.default_algorithm)
+		self.files_list.delete(0,tk.END)
+		path = '\\\\.\\' + self.default_drive.get() + ':'
+		rootPath = self.default_drive.get()
+		self.files_in_drive = getfiles(path,rootPath)
+		for directory in self.files_in_drive:
+			self.files_list.insert(tk.END,directory['dir_path'])
+			for files in directory['list_child']:
+				self.files_list.insert(tk.END,files['dir_path'])
+		temp = Wait()
+		temp.mainloop()
+
 
 
 	def format_drive(self):
@@ -207,7 +231,7 @@ class CleanDrive(tk.Frame):
 
 	def select_deselect_files(self):
 		if self.select_value.get() == 1:
-			print(self.files_list.get_children())
+			self.files_list.selection_set(0,tk.END)
 		else:
 			self.files_list.selection_clear(0,tk.END)			
 
