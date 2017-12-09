@@ -45,6 +45,9 @@ class Wait(tk.Tk):
 		self.label = tk.Label(self,text='Done!')
 		self.label.pack()
 
+	def set_message(self,message):
+		self.label.config(text=message)
+
 	def exit(self):
 		self.quit()
 
@@ -257,9 +260,16 @@ class CleanDrive(tk.Frame):
 
 		path = '\\\\.\\' + self.default_drive.get() + ':'
 		rootPath = self.default_drive.get()
+		self.files_in_drive = getfiles(path,rootPath)
 		try:
 			int(self.sector_number_entry.get())
-			delete_sectors(path,rootPath,int(self.sector_number_entry.get()),method)
+			if check_valid(int(self.sector_number_entry.get()),self.files_in_drive,method):
+				temp = Wait()
+				temp.mainloop()
+			else:
+				temp = Wait()
+				temp.set_message('Invalid Sector!')
+				temp.mainloop()
 		except ValueError:
 			self.sector_number_entry.delete(0,tk.END)
 

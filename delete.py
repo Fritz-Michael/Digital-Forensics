@@ -230,99 +230,59 @@ def deletion(flist, method, n_pass=0):
 
 def file_write(selected_file, method, npass=0):
     drive = open(selected_file["dir_path"],'r+b')
+    try:
+        if method == 0:
+            # zero fill
+            for ctr in range(selected_file["data_totalsize"]):
+                drive.write(struct.pack('s', b'\x00'))
 
-    if method == 0:
-        # zero fill
-        for ctr in range(selected_file["data_totalsize"]):
-            drive.write(struct.pack('s', b'\x00'))
+        if method == 1:
+            # secure wipe
+            for ctr in range(selected_file["data_totalsize"]):
+                # randomize
+                dictio = ['00','11']
+                rnd = random.choice(dictio)
+                rnd = binascii.unhexlify(rnd)
 
-    if method == 1:
-        # secure wipe
-        for ctr in range(selected_file["data_totalsize"]):
-            # randomize
-            dictio = ['00','11']
-            rnd = random.choice(dictio)
-            rnd = binascii.unhexlify(rnd)
+                drive.write(struct.pack('s', rnd))      
 
-            drive.write(struct.pack('s', rnd))      
+        if method == 2:
+            # schneier
+            for outctr in range(7):
+                if outctr == 0:
+                    for ctr in range(selected_file["data_totalsize"]):
+                        drive.write(struct.pack('s', b'\x00'))
+                elif outctr == 1:
+                    for ctr in range(selected_file["data_totalsize"]):
+                        drive.write(struct.pack('s', b'\x11'))
+                else:
+                    dictio = ['0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f']
+                    for ctr in range(selected_file["data_totalsize"]):
+                        character = random.choice(dictio)
+                        character = character + random.choice(dictio)
+                        character = binascii.unhexlify(character)
+                        drive.write((struct.pack('s', character)))
+    except TypeError:
+        pass
 
-    if method == 2:
-        # schneier
-        for outctr in range(7):
-            if outctr == 0:
-                for ctr in range(selected_file["data_totalsize"]):
-                    drive.write(struct.pack('s', b'\x00'))
-            elif outctr == 1:
-                for ctr in range(selected_file["data_totalsize"]):
-                    drive.write(struct.pack('s', b'\x11'))
-            else:
-                dictio = ['0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f']
-                for ctr in range(selected_file["data_totalsize"]):
+        if method == 3:
+          # random data
+          dictio = ['0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f']
+          for outctr in range(npass):
+              for ctr in range(selected_file["data_totalsize"]):
                     character = random.choice(dictio)
                     character = character + random.choice(dictio)
                     character = binascii.unhexlify(character)
                     drive.write((struct.pack('s', character)))
-
-    if method == 3:
-      # random data
-      dictio = ['0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f']
-      for outctr in range(npass):
-          for ctr in range(selected_file["data_totalsize"]):
-                character = random.choice(dictio)
-                character = character + random.choice(dictio)
-                character = binascii.unhexlify(character)
-                drive.write((struct.pack('s', character)))
 
 def check_valid(sector, flist, method, n_pass=0):
-    for file in flist:
-        if not file["is_folder"]:
-            if sector <= (file["data_totalsize"] + file["data_start"]) / 512 and sector >= file["data_start"] / 512:
-                deletion(file, method, n_pass)
-                return True
+    for folder in flist:
+        for file in folder["list_child"]:
+            if not file["multi_run"]:
+                if sector <= (file["data_totalsize"] + file["data_start"]) / 512 and sector >= (file["data_start"] / 512):
+                    deletion(file, method, n_pass)
+                    return True
     return False
-
-
-def delete_sectors(path, rootPath, sector, method):
-    bytes_per_sector = getbytespersector(rootPath)
-    drive = open(path, 'r+b')
-    drive.seek(sector*bytes_per_sector)
-    
-    if method == 0:
-        for ctr in range(bytes_per_sector):
-            drive.write(b'\x00')
-
-    if method == 1:
-        for ctr in range(bytes_per_sector):
-            dictio = ['00','11']
-            rnd = random.choice(dictio)
-            rnd = binascii.unhexlify(rnd)
-            drive.write(struct.pack('s', rnd))      
-
-    if method == 2:
-        for outctr in range(8):
-            if outctr == 0:
-                for ctr in range(bytes_per_sector/8):
-                    drive.write(struct.pack('s', b'\x00'))
-            elif outctr == 1:
-                for ctr in range(bytes_per_sector/8):
-                    drive.write(struct.pack('s', b'\x11'))
-            else:
-                dictio = ['0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f']
-                for ctr in range(bytes_per_sector/8):
-                    character = random.choice(dictio)
-                    character = character + random.choice(dictio)
-                    character = binascii.unhexlify(character)
-                    drive.write((struct.pack('s', character)))
-
-    if method == 3:
-      # random data
-      dictio = ['0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f']
-      for outctr in range(8):
-          for ctr in range(bytes_per_sector/8):
-                character = random.choice(dictio)
-                character = character + random.choice(dictio)
-                character = binascii.unhexlify(character)
-                drive.write((struct.pack('s', character)))
 
 """
     INSTRUCTIONS:
