@@ -1,0 +1,2 @@
+1. run setup.py first
+2. run main.py
