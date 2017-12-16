@@ -89,6 +89,12 @@ class Encryption(tk.Frame):
 			result.set_results(crypto[0],crypto[1])
 			self.enter_message_text.delete('1.0',tk.END)
 			result.mainloop()
+		if self.default_algorithm.get() == 'Sample':
+			result = ResultWindow()
+			crypto = encrypt_sample(self.enter_message_text.get('1.0','end-1c'))
+			result.set_results(crypto[0],crypto[1])
+			self.enter_message_text.delete('1.0',tk.END)
+			result.mainloop()
 
 
 	def decrypt(self):
@@ -114,6 +120,12 @@ class Encryption(tk.Frame):
 		if self.default_algorithm.get() == 'Fritz':
 			result = ResultWindow()
 			result.set_results(decrypt_fritz(self.enter_crypto_text.get('1.0','end-1c'),self.enter_key_entry.get()),self.enter_key_entry.get())
+			self.enter_crypto_text.delete('1.0',tk.END)
+			self.enter_key_entry.delete(0,'end')
+			result.mainloop()
+		if self.default_algorithm.get() == 'Sample':
+			result = ResultWindow()
+			result.set_results(decrypt_sample(self.enter_crypto_text.get('1.0','end-1c'),self.enter_key_entry.get()),self.enter_key_entry.get())
 			self.enter_crypto_text.delete('1.0',tk.END)
 			self.enter_key_entry.delete(0,'end')
 			result.mainloop()

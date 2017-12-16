@@ -157,6 +157,19 @@ def decrypt_fritz(crypto,key):
 	rotate_text = text[passes:] + text[:passes]
 	return rotate_text[1:]
 
+def encrypt_sample(message):
+	key = rand.randint(1,9)
+	temp = [ord(x)-65 for x in message]
+	xor = [x^key for x in temp]
+	cipher_text = [chr(x+65) for x in xor]
+	return (''.join(cipher_text),key)
+
+def decrypt_sample(crypto,key):
+	temp = [ord(x)-65 for x in crypto]
+	xor = [x^int(key) for x in temp]
+	return ''.join([chr(x+65) for x in xor])
+
 if __name__ == '__main__':
-	pass
+	temp = encrypt_sample('panget si pepeds')
+	print(decrypt_sample(temp[0],temp[1]))
 	
