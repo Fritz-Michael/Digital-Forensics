@@ -3,6 +3,7 @@ from functools import partial
 from filerecovery import *
 from cleandrive import *
 from encryption import *
+from steganography import *
 from aboutus import *
 
 class main(tk.Tk):
@@ -75,7 +76,13 @@ class main(tk.Tk):
 
 
 	def steganography(self):
-		pass
+		self.label.config(text='Steganography')
+		self.function_frame.destroy()
+		self.function_frame = tk.Frame(self,width=self.frame_width,height=self.frame_height,bg=None,highlightthickness=2,highlightbackground='black')
+		self.function_frame.grid_propagate(False)
+		self.function_frame.pack_propagate(False)
+		self.function_frame.grid(row=1,column=2,rowspan=5,columnspan=5)
+		Steganography(parent=self.function_frame,controller=self)
 
 
 	def about_us(self):

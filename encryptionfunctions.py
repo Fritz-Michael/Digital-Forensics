@@ -1,7 +1,7 @@
 import bitstring as bt
 import random as rand
 from functools import reduce
-
+import struct
 
 def caesar_cipher(message):
 	key = rand.randint(1,26)
@@ -62,7 +62,7 @@ def emoji_encrypt(message):
 	'>:)', ":'(", 'XO', 'D:', '(:', ':/']
 	message = message.lower()
 	ciphertext = ''
-	cipher = rand.randint(1,26)
+	cipher = rand.randint(1,15)
 	isCaps = False
 	sub = 97
 	for char in message:
@@ -110,7 +110,7 @@ def emoji_decrypt(message,key):
 					x += 2
 					num.append(y)
 		x += 1
-	# num2 = list(map(lambda x: (int(x)-int(key))%len(dictionary),num))
+
 	num2 = []
 	for x in num:
 		if x == 32:
@@ -140,6 +140,23 @@ def decrypt_XOR(crypto,key):
 	message = [chr(x) for x in xor]
 	return ''.join(message)
 
+def encrypt_fritz(message):
+	key = rand.randint(97,122)
+	passes = rand.randint(1,9)
+	text = chr(key) + message
+	rotate_text = text[passes:] + text[:passes]
+	cipher_text = ''.join([chr((ord(x)^key) + 65) for x in rotate_text])
+	passes = chr(passes+65)
+	key = chr(key) + passes
+	return (cipher_text,key)
+
+def decrypt_fritz(crypto,key):
+	passes = (ord(key[1]) - 65) * -1
+	key = key[0]
+	text = ''.join([chr( (ord(x)-65) ^ ord(key) ) for x in crypto])
+	rotate_text = text[passes:] + text[:passes]
+	return rotate_text[1:]
 
 if __name__ == '__main__':
-	print((-12)%26)
+	pass
+	
