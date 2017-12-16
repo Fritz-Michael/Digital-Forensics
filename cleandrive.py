@@ -1,6 +1,7 @@
 from functools import partial
 import tkinter as tk
 from tkinter import *
+from tkinter import messagebox
 from tkinter import ttk
 from filerecoveryfunctions import *
 from formatdrivefunctions import *
@@ -36,21 +37,6 @@ class CreateToolTip(object):
             self.tw.destroy()
 
 
-class Wait(tk.Tk):
-
-	def __init__(self,*args,**kwargs):
-		tk.Tk.__init__(self,*args,**kwargs)
-		
-		self.label = tk.Label(self,text='Done!')
-		self.label.pack()
-
-	def set_message(self,message):
-		self.label.config(text=message)
-
-	def exit(self):
-		self.quit()
-
-
 class CleanDrive(tk.Frame):
 
 	def __init__(self,parent,controller):
@@ -58,9 +44,9 @@ class CleanDrive(tk.Frame):
 		self.controller = controller
 		self.parent = parent
 
-		self.file_deletion_frame = tk.Frame(self.parent,highlightthickness=2,highlightbackground='black')
-		self.clean_sector_frame = tk.Frame(self.parent,highlightthickness=2,highlightbackground='black')
-		self.format_drive_frame = tk.Frame(self.parent,highlightthickness=2,highlightbackground='black')
+		self.file_deletion_frame = tk.Frame(self.parent,bd=2,relief=tk.SUNKEN)
+		self.clean_sector_frame = tk.Frame(self.parent,bd=2,relief=tk.SUNKEN)
+		self.format_drive_frame = tk.Frame(self.parent,bd=2,relief=tk.SUNKEN)
 
 		self.file_deletion_init()
 		self.clean_sector_init()
@@ -82,7 +68,7 @@ class CleanDrive(tk.Frame):
 		self.alignment_frames.append(tk.Frame(self.advanced_settings_frame))
 		self.set_drives_menu()
 		self.scan_drive_button = tk.Button(self.alignment_frames[0],text='Scan Drive',command=self.scan_drive)
-		self.delete_files_label = tk.Label(self.file_deletion_frame,text='File Deletion')
+		self.delete_files_label = tk.Label(self.file_deletion_frame,text='File Deletion',font='Helvetica 11 bold')
 		self.files_list = tk.Listbox(self.file_deletion_frame,selectmode=tk.MULTIPLE,height=7,width=100)
 
 		self.select_deselect = tk.Checkbutton(self.alignment_frames[1],text='Select/Deselect All',variable=self.select_value,command=self.select_deselect_files)
@@ -107,7 +93,7 @@ class CleanDrive(tk.Frame):
 
 	def clean_sector_init(self):
 		self.alignment_frames.append(tk.Frame(self.clean_sector_frame))
-		self.clean_sector_label = tk.Label(self.clean_sector_frame,text='Delete Sector')
+		self.clean_sector_label = tk.Label(self.clean_sector_frame,text='Delete Sector',font='Helvetica 11 bold')
 		self.sector_number_label = tk.Label(self.alignment_frames[3],text='Sector Number: ')
 		self.sector_number_entry = tk.Entry(self.alignment_frames[3])
 		self.delete_sector_button = tk.Button(self.clean_sector_frame,text='Delete Sector',command=self.delete_sector)
@@ -120,9 +106,9 @@ class CleanDrive(tk.Frame):
 
 
 	def format_drive_init(self):
-		self.format_drive_label = tk.Label(self.format_drive_frame,text='Format Drive')
+		self.format_drive_label = tk.Label(self.format_drive_frame,text='Format Drive',font='Helvetica 11 bold')
 		self.format_drive_button = tk.Button(self.format_drive_frame,text='Format',command=self.format_drive)
-		self.format_drive_label.pack(pady=10)
+		self.format_drive_label.pack(pady=3)
 
 		self.set_file_formats()
 		self.format_drive_button.pack(pady=5)
@@ -178,20 +164,16 @@ class CleanDrive(tk.Frame):
 				self.files_list.insert(tk.END,directory['dir_path'])
 				for files in directory['list_child']:
 					self.files_list.insert(tk.END,files['dir_path'])
-			temp = Wait()
-			temp.mainloop()
+			messagebox.showinfo('Scan Drive','Done! Your filesystem is NTFS')
 		elif 'File System Type: FAT32' in get_file_system(path):
 			print('hello')
 			self.files_in_drive = get_file_info(path,get_inodes(path))
 			print(self.files_in_drive)
 			for files in self.files_in_drive:
 				self.files_list.insert(tk.END,files)
-			temp = Wait()
-			temp.mainloop()
+			messagebox.showinfo('Scan Drive','Done! Your filesystem is FAT32')
 		else:
-			temp = Wait()
-			temp.set_message('Unknown File System')
-			temp.mainloop()	
+			messagebox.showwarning('Error','Unknown filesystem!')
 
 
 	def delete_files(self):
@@ -226,12 +208,9 @@ class CleanDrive(tk.Frame):
 				self.files_list.insert(tk.END,directory['dir_path'])
 				for files in directory['list_child']:
 					self.files_list.insert(tk.END,files['dir_path'])
-			temp = Wait()
-			temp.mainloop()
+			messagebox.showinfo('Delete Files','Done!')
 		else:
-			temp = Wait()
-			temp.set_message('For NTFS Only')
-			temp.mainloop()
+			messagebox.showwarning('Error','NTFS only!')
 
 
 	def format_drive(self):
@@ -244,8 +223,7 @@ class CleanDrive(tk.Frame):
 		elif self.default_file_format.get() == 'exFAT':
 			format_drive_to_exFAT(path)
 		self.enable_buttons()
-		temp = Wait()
-		temp.mainloop()
+		messagebox.showinfo('Format Drive','Done!')
 
 
 	def advanced_settings(self):
@@ -281,18 +259,13 @@ class CleanDrive(tk.Frame):
 			try:
 				int(self.sector_number_entry.get())
 				if check_valid(int(self.sector_number_entry.get()),self.files_in_drive,method):
-					temp = Wait()
-					temp.mainloop()
+					messagebox.showinfo('Delete Sector','Done!')
 				else:
-					temp = Wait()
-					temp.set_message('Invalid Sector!')
-					temp.mainloop()
+					messagebox.showwarning('Error','Invalid Sector!')
 			except ValueError:
 				self.sector_number_entry.delete(0,tk.END)
 		else:
-			temp = Wait()
-			temp.set_message('NTFS Only!')
-			temp.mainloop()
+			messagebox.showwarning('Error!','NTFS only!')
 
 
 	def disable_buttons(self):

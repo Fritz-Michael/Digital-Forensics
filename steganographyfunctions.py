@@ -13,4 +13,4 @@ def jpg_tiff_encode(file_name, message, mfile_name):
 	secret = exifHeader.hide(file_name, mfile_name, secret_message=message)
 
 def jpg_tiff_decode(mfile_name):
-	return exifHeader.reveal(mfile_name)
+	return exifHeader.reveal(mfile_name).decode()

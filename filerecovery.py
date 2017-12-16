@@ -12,7 +12,7 @@ class FileRecovery(tk.Frame):
 		
 		self.controller = controller
 		self.parent = parent
-		self.settings_frame = tk.Frame(self.parent,bg=None,highlightthickness=2,highlightbackground='red')
+		self.settings_frame = tk.Frame(self.parent,bd=2,relief=tk.SUNKEN)
 		self.initialize_settings_frame()
 		self.alignment_frames.append(tk.Frame(self.parent))
 
