@@ -39,46 +39,63 @@ class Steganography(tk.Frame):
 
 
 	def encrypt(self):
-		if self.file != '' and self.file != '/':
-			if '.png' in self.file:
-				self.output_file = filedialog.asksaveasfilename(initialdir=self.file,title='Select Directory',filetypes=(('PNG files','*.png'),))
-				if self.output_file != '':
-					png_encode(self.file,self.message_box.get('1.0','end-1c'),self.output_file + '.png')
-					self.message_box.delete('1.0',tk.END)
-					self.file = '/'
+		if self.message_box.get('1.0','end-1c') != '':
+			if self.file != '' and self.file != '/':
+				if '.png' in self.file:
+					self.output_file = filedialog.asksaveasfilename(initialdir=self.file,title='Select Directory',filetypes=(('PNG files','*.png'),))
+					if self.output_file != '':
+						png_encode(self.file,self.message_box.get('1.0','end-1c'),self.output_file + '.png')
+						self.message_box.delete('1.0',tk.END)
+						self.file = '/'
+						self.choose_file_label.config(text=self.file)
+					else:
+						messagebox.showwarning('Error','Invalid File Destination!')
+				elif '.jpg' in self.file or '.jpeg' in self.file:
+					self.output_file = filedialog.asksaveasfilename(initialdir=self.file,title='Select Directory',filetypes=(('JPG files','*.jpg;*.jpeg'),))
+					if self.output_file != '':
+						jpg_tiff_encode(self.file,self.message_box.get('1.0','end-1c'),self.output_file + '.jpg')
+						self.message_box.delete('1.0',tk.END)
+						self.file = '/'
+						self.choose_file_label.config(text=self.file)
+					else:
+						messagebox.showwarning('Error','Invalid File Destination!')
+				elif '.wav' in self.file:
+					self.output_file = filedialog.asksaveasfilename(initialdir=self.file,title='Select Directory',filetypes=(('WAV files','*.wav'),))
+					print(self.output_file)
 				else:
-					messagebox.showwarning('Error','Invalid File Destination!')
-			elif '.jpg' in self.file or '.jpeg' in self.file:
-				self.output_file = filedialog.asksaveasfilename(initialdir=self.file,title='Select Directory',filetypes=(('JPG files','*.jpg;*.jpeg'),))
-				if self.output_file != '':
-					jpg_tiff_encode(self.file,self.message_box.get('1.0','end-1c'),self.output_file + '.jpg')
-					self.message_box.delete('1.0',tk.END)
-					self.file = '/'
-				else:
-					messagebox.showwarning('Error','Invalid File Destination!')
-			elif '.wav' in self.file:
-				self.output_file = filedialog.asksaveasfilename(initialdir=self.file,title='Select Directory',filetypes=(('WAV files','*.wav'),))
-				print(self.output_file)
+					messagebox.showwarning('Error','Invalid File!')
 			else:
-				messagebox.showwarning('Error','Invalid File!')
+				messagebox.showwarning('Error','Choose a file first!')
 		else:
-			messagebox.showwarning('Error','Choose a file first!')
+			messagebox.showwarning('Error','Please input a message!')
 
 
 	def decrypt(self):
 		if self.output != '' and self.output != '/':
 			if '.png' in self.output:
-				msg = png_encode(self.output)
-				self.cipher_box.config(state=tk.NORMAL)
-				self.cipher_box.delete('1.0',tk.END)
-				self.cipher_box.insert(tk.END,msg)
-				self.cipher_box.config(state=tk.DISABLED)
+				try:
+					msg = png_decode(self.output)
+				except:
+					messagebox.showwarning('Error','Nothing to decrypt!')
+				else:
+					self.cipher_box.config(state=tk.NORMAL)
+					self.cipher_box.delete('1.0',tk.END)
+					self.cipher_box.insert(tk.END,msg)
+					self.cipher_box.config(state=tk.DISABLED)
+				self.output = '/'
+				self.choose_crypto_label.config(text=self.output)
 			elif '.jpg' in self.output or '.jpeg' in self.output:
-				msg = jpg_tiff_decode(self.output)
-				self.cipher_box.config(state=tk.NORMAL)
-				self.cipher_box.delete('1.0',tk.END)
-				self.cipher_box.insert(tk.END,msg)
-				self.cipher_box.config(state=tk.DISABLED)
+				try:
+					msg = jpg_tiff_decode(self.output)
+				except:
+					messagebox.showwarning('Error','Nothing to decrypt!')
+				else:
+					self.cipher_box.config(state=tk.NORMAL)
+					self.cipher_box.delete('1.0',tk.END)
+					self.cipher_box.insert(tk.END,msg)
+					self.cipher_box.config(state=tk.DISABLED)
+				self.output = '/'
+				self.choose_crypto_label.config(text=self.output)
 			elif '.wav' in self.output:
 				pass
 			else:
