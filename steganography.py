@@ -5,6 +5,44 @@ from tkinter import filedialog
 from tkinter import messagebox
 from tkinter import ttk
 from steganographyfunctions import *
+from PIL import Image, ImageTk
+
+class ImageResult(tk.Toplevel):
+
+	def __init__(self,*args,**kwargs):
+		tk.Toplevel.__init__(self,*args,**kwargs)
+		self.title('Result')
+
+		self.temp_frame = tk.Frame(self)
+		self.original_label = tk.Label(self.temp_frame,text='Original')
+		self.output_label = tk.Label(self.temp_frame,text='Output')
+		self.original_image = tk.Frame(self,bd=2,height=250,width=250)
+		self.output_image = tk.Frame(self,bd=2,height=250,width=250)
+		self.original_image_label = tk.Label(self.original_image)
+		self.output_image_label = tk.Label(self.output_image)
+		
+		self.temp_frame.pack(side=tk.TOP)
+		self.original_label.pack(side=tk.LEFT,padx=100)
+		self.output_label.pack(side=tk.RIGHT,padx=100)
+		self.original_image.pack(side=tk.LEFT)
+		self.output_image.pack(side=tk.LEFT)
+		self.original_image_label.pack()
+		self.output_image_label.pack()
+
+
+	def set_images(self,image1,image2):
+		img1 = Image.open(image1)
+		img1 = img1.resize((250,250),Image.ANTIALIAS)
+		photo1 = ImageTk.PhotoImage(img1)
+		self.original_image_label.config(image=photo1)
+		self.original_image_label.image = photo1
+
+		img2 = Image.open(image2)
+		img2 = img2.resize((250,250),Image.ANTIALIAS)
+		photo2 = ImageTk.PhotoImage(img2)
+		self.output_image_label.config(image=photo2)
+		self.output_image_label.image = photo2
+
 
 class Steganography(tk.Frame):
 
@@ -46,8 +84,12 @@ class Steganography(tk.Frame):
 					if self.output_file != '':
 						png_encode(self.file,self.message_box.get('1.0','end-1c'),self.output_file + '.png')
 						self.message_box.delete('1.0',tk.END)
+						temp = self.file
 						self.file = '/'
 						self.choose_file_label.config(text=self.file)
+						results = ImageResult()
+						results.set_images(temp,self.output_file+'.png')
+						results.mainloop()
 					else:
 						messagebox.showwarning('Error','Invalid File Destination!')
 				elif '.jpg' in self.file or '.jpeg' in self.file:
@@ -55,8 +97,12 @@ class Steganography(tk.Frame):
 					if self.output_file != '':
 						jpg_tiff_encode(self.file,self.message_box.get('1.0','end-1c'),self.output_file + '.jpg')
 						self.message_box.delete('1.0',tk.END)
+						temp = self.file
 						self.file = '/'
 						self.choose_file_label.config(text=self.file)
+						results = ImageResult()
+						results.set_images(temp,self.output_file+'.jpg')
+						results.mainloop()
 					else:
 						messagebox.showwarning('Error','Invalid File Destination!')
 				elif '.wav' in self.file:
@@ -141,3 +187,8 @@ class Steganography(tk.Frame):
 		self.cipher_label.pack(side=tk.TOP,padx=8)
 		self.cipher_box.pack(side=tk.TOP,fill=tk.X,pady=9)
 		self.decrypt_button.pack()
+
+
+if __name__ == '__main__':
+	temp = ImageResult()
+	temp.mainloop()
