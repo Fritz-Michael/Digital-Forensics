@@ -107,7 +107,14 @@ class Steganography(tk.Frame):
 						messagebox.showwarning('Error','Invalid File Destination!')
 				elif '.wav' in self.file:
 					self.output_file = filedialog.asksaveasfilename(initialdir=self.file,title='Select Directory',filetypes=(('WAV files','*.wav'),))
-					print(self.output_file)
+					if self.output_file != '':
+						encrypt_wav(self.file,self.message_box.get('1.0','end-1c'),self.output_file + '.wav')
+						self.message_box.delete('1.0',tk.END)
+						temp = self.file
+						self.file = '/'
+						self.choose_file_label.config(text=self.file)
+					else:
+						messagebox.showwarning('Error','Invalid File Destination!')
 				else:
 					messagebox.showwarning('Error','Invalid File!')
 			else:
@@ -143,7 +150,17 @@ class Steganography(tk.Frame):
 				self.output = '/'
 				self.choose_crypto_label.config(text=self.output)
 			elif '.wav' in self.output:
-				pass
+				try:
+					msg = decrypt_wav(self.output)
+				except:
+					messagebox.showwarning('Error','Nothing to decrypt!')
+				else:
+					self.cipher_box.config(state=tk.NORMAL)
+					self.cipher_box.delete('1.0',tk.END)
+					self.cipher_box.insert(tk.END,msg)
+					self.cipher_box.config(state=tk.DISABLED)
+				self.output = '/'
+				self.choose_crypto_label.config(text=self.output)
 			else:
 				messagebox.showwarning('Error','Invalid File!')
 		else:
