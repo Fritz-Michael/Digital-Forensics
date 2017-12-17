@@ -60,7 +60,7 @@ def emoji_encrypt(message):
 	dictionary = [':)', ':D', ':(', 'XD', '>_<', '-_-', ';(', 'o_O', 'xC', ';D',
 	'xP', 'xb', 'B-)', 'B-(', 'X)', 'X(', ':3', ':*', ';)', '>:(',
 	'>:)', ":'(", 'XO', 'D:', '(:', ':/']
-	message = message.lower()
+	#message = message.lower()
 	ciphertext = ''
 	cipher = rand.randint(1,15)
 	isCaps = False
